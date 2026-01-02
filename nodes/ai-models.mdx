@@ -9,25 +9,29 @@ MachinaOs supports three major AI providers for chat completions.
 
 ## Available Models
 
+Models are fetched dynamically from each provider's API when you add your API key.
+
 ### OpenAI
 | Model | Best For |
 |-------|----------|
-| gpt-4o | General purpose, fast |
-| gpt-4.1 | Complex reasoning |
-| o1-mini | Lightweight reasoning |
+| gpt-5.2 | Most capable, professional tasks |
+| gpt-5 | Advanced reasoning, multimodal |
+| o3 | Complex reasoning |
+| o4-mini | Fast, cost-efficient reasoning |
 
 ### Anthropic Claude
 | Model | Best For |
 |-------|----------|
-| claude-sonnet-4 | Balanced performance |
-| claude-haiku-3.5 | Fast responses |
-| claude-opus-4 | Complex analysis |
+| claude-opus-4.5 | Best for coding and agents |
+| claude-sonnet-4.5 | Balanced performance |
+| claude-haiku-4.5 | Fast responses |
 
 ### Google Gemini
 | Model | Best For |
 |-------|----------|
+| gemini-3-pro | Most intelligent, complex tasks |
+| gemini-3-flash | Fast, frontier performance |
 | gemini-2.5-pro | Long context, multimodal |
-| gemini-2.0-flash | Speed-optimized |
 
 ## Adding API Keys
 
@@ -45,7 +49,7 @@ API keys are encrypted and stored locally. They're never sent to MachinaOs serve
 ### Parameters
 
 <ParamField path="model" type="select" required>
-  The model to use (gpt-4o, gpt-4.1, o1-mini)
+  The model to use (gpt-5.2, gpt-5, o3, o4-mini)
 </ParamField>
 
 <ParamField path="prompt" type="string" required>
@@ -69,7 +73,7 @@ API keys are encrypted and stored locally. They're never sent to MachinaOs serve
 ```json
 {
   "response": "The AI's response text",
-  "model": "gpt-4o",
+  "model": "gpt-5.2",
   "usage": {
     "prompt_tokens": 50,
     "completion_tokens": 100,
@@ -91,7 +95,7 @@ Max Tokens: 200
 ### Parameters
 
 <ParamField path="model" type="select" required>
-  Claude model (claude-sonnet-4, claude-haiku-3.5, claude-opus-4)
+  Claude model (claude-opus-4.5, claude-sonnet-4.5, claude-haiku-4.5)
 </ParamField>
 
 <ParamField path="prompt" type="string" required>
@@ -115,7 +119,7 @@ Max Tokens: 200
 ```json
 {
   "response": "Claude's response",
-  "model": "claude-sonnet-4",
+  "model": "claude-sonnet-4.5",
   "stop_reason": "end_turn"
 }
 ```
@@ -132,7 +136,7 @@ Prompt: Explain this error: {{webhookTrigger.body.error}}
 ### Parameters
 
 <ParamField path="model" type="select" required>
-  Gemini model (gemini-2.5-pro, gemini-2.0-flash)
+  Gemini model (gemini-3-pro, gemini-3-flash, gemini-2.5-pro)
 </ParamField>
 
 <ParamField path="prompt" type="string" required>
@@ -156,7 +160,7 @@ Prompt: Explain this error: {{webhookTrigger.body.error}}
 ```json
 {
   "response": "Gemini's response",
-  "model": "gemini-2.5-pro"
+  "model": "gemini-3-pro"
 }
 ```
 
