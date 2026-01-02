@@ -17,11 +17,14 @@ The easiest way to run MachinaOs is with Docker Compose.
 
 ```bash
 # Clone the repository
-git clone https://github.com/trohitg/MachinaOs.git
+git clone https://github.com/trohitg/MachinaOS.git
 cd MachinaOs
 
+# Build images
+npm run docker:build
+
 # Start all services
-docker-compose up -d
+npm run docker:up
 ```
 
 This starts 4 containers:
@@ -82,28 +85,25 @@ docker-compose --profile redis up -d
 
 ```bash
 # Start services
-docker-compose up -d
+npm run docker:up
 
 # View logs
-docker-compose logs -f
-
-# View specific service logs
-docker-compose logs -f backend
-
-# Restart all services
-docker-compose restart
-
-# Restart specific service
-docker-compose restart backend
+npm run docker:logs
 
 # Stop all services
-docker-compose down
+npm run docker:down
+
+# Rebuild after code changes
+npm run docker:build && npm run docker:up
 
 # Stop and remove volumes (clean slate)
 docker-compose down -v
 
-# Rebuild after code changes
-docker-compose up --build -d
+# View specific service logs
+docker-compose logs -f backend
+
+# Restart specific service
+docker-compose restart backend
 ```
 
 ## Accessing Services

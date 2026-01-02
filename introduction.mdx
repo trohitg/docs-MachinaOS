@@ -5,52 +5,64 @@ description: Visual workflow automation platform with AI agents, WhatsApp, and A
 
 # Welcome to MachinaOs
 
-MachinaOs is an open-source workflow automation platform inspired by n8n, built with React Flow and Python FastAPI. Create powerful automations using a visual node-based editor.
+MachinaOs is an open-source workflow automation platform inspired by n8n, built with React Flow and Python FastAPI. Create powerful automations using a visual node-based editor with real-time execution feedback.
 
 <CardGroup cols={2}>
-  <Card title="35+ Nodes" icon="cube">
-    AI models, WhatsApp, Android automation, webhooks, and more
+  <Card title="34 Nodes" icon="cube">
+    AI models, WhatsApp, Android automation, webhooks, code execution, and more
   </Card>
-  <Card title="Real-time Execution" icon="bolt">
-    WebSocket-first architecture with live status updates
+  <Card title="WebSocket-First" icon="bolt">
+    25 WebSocket message types for real-time status updates
   </Card>
   <Card title="AI-Powered" icon="brain">
-    Integrate OpenAI, Claude, and Gemini with memory and tools
+    OpenAI, Claude, Gemini with conversation memory and tool calling
   </Card>
   <Card title="Self-Hosted" icon="server">
-    Full control over your data with Docker deployment
+    Full control with Docker deployment and n8n-pattern caching
   </Card>
 </CardGroup>
 
 ## Key Features
 
 ### AI Integration
-Connect to leading AI providers with built-in support for conversation memory and tool calling.
+Connect to leading AI providers with built-in conversation memory and tool calling support.
 
-- **OpenAI** - GPT-4o, GPT-4 Turbo, GPT-3.5
-- **Anthropic** - Claude 3.5 Sonnet, Claude 3 Opus
-- **Google** - Gemini 1.5 Pro, Gemini 1.5 Flash
+- **OpenAI** - GPT-4o, GPT-4 Turbo, GPT-3.5 Turbo with response format options
+- **Anthropic** - Claude 3.5 Sonnet/Haiku, Claude 3 Opus/Sonnet/Haiku
+- **Google** - Gemini 1.5 Pro/Flash with multimodal and safety settings
+- **AI Agent** - Advanced agent with iterative reasoning and memory input
+- **Simple Memory** - Session-based conversation history with buffer/window modes
 
 ### WhatsApp Automation
 Send and receive WhatsApp messages with event-driven triggers.
 
-- QR code pairing
-- Message filtering by sender, group, or keywords
-- Media support
+- QR code pairing via Go WhatsApp bridge (whatsmeow)
+- Message filtering: sender, group, keywords, forwarded status
+- Group/sender name persistence for display
 
 ### Android Device Control
-Automate Android devices via ADB or remote WebSocket relay.
+Automate Android devices via local ADB or remote WebSocket relay.
 
-- 17 service nodes (battery, WiFi, Bluetooth, camera, etc.)
-- App launching and system monitoring
-- Sensor data access
+**17 Service Nodes:**
+- System Monitoring: battery, network, system info, location
+- App Management: launcher, app list
+- Device Automation: WiFi, Bluetooth, audio, device state, screen control, airplane mode
+- Sensors: motion detection, environmental sensors
+- Media: camera control, media playback
 
 ### Webhooks & HTTP
-Receive incoming webhooks and make HTTP requests to external APIs.
+Event-driven webhook triggers and HTTP client for external APIs.
 
-- Dynamic webhook endpoints
-- Full HTTP method support
-- Custom response handling
+- Dynamic webhook endpoints at `/webhook/{path}`
+- HTTP Request node with GET, POST, PUT, DELETE, PATCH
+- Webhook Response for custom responses
+
+### Code Execution
+Execute Python code directly in workflows.
+
+- Syntax-highlighted editor with Dracula theme
+- Access to `input_data` from connected nodes
+- Console output capture
 
 ## Quick Links
 
@@ -62,7 +74,7 @@ Receive incoming webhooks and make HTTP requests to external APIs.
     Build your first workflow in 5 minutes
   </Card>
   <Card title="Node Catalog" icon="grid" href="/nodes/overview">
-    Explore all available nodes
+    Explore all 34 nodes
   </Card>
   <Card title="Tutorials" icon="graduation-cap" href="/tutorials/first-workflow">
     Step-by-step guides
@@ -71,16 +83,32 @@ Receive incoming webhooks and make HTTP requests to external APIs.
 
 ## Architecture Overview
 
-MachinaOs uses a modern tech stack:
+MachinaOs follows n8n-inspired architectural patterns with modular backend services:
 
 | Layer | Technology |
 |-------|------------|
 | Frontend | React 19, TypeScript, React Flow, Zustand |
 | Backend | Python FastAPI, SQLAlchemy, LangChain |
-| Real-time | WebSocket (25 message types) |
-| Database | SQLite (dev), Redis (production cache) |
-| Deployment | Docker Compose, nginx reverse proxy |
+| Real-time | WebSocket (25 message handlers) |
+| WhatsApp | Go service with whatsmeow library |
+| Cache | Redis (production) / SQLite (dev) / Memory fallback |
+| Deployment | Docker Compose (4 containers), nginx reverse proxy |
+
+### Backend Service Architecture
+
+```
+server/services/
+├── workflow.py              # Facade (~460 lines)
+├── node_executor.py         # Registry-based dispatch
+├── parameter_resolver.py    # Template variable resolution
+├── deployment/              # Event-driven lifecycle
+│   ├── manager.py           # Deploy, cancel, status
+│   └── triggers.py          # Cron and event triggers
+└── execution/               # Parallel orchestration
+    ├── executor.py          # Conductor decide pattern
+    └── cache.py             # Redis/SQLite persistence
+```
 
 <Info>
-MachinaOs is designed for self-hosting. Your data stays on your infrastructure.
+MachinaOs is designed for self-hosting. Your data stays on your infrastructure with automatic cache fallback for any environment.
 </Info>

@@ -28,35 +28,37 @@ MachinaOs can be installed using npm for development or Docker for production.
   <Tab title="npm (Development)">
     ```bash
     # Clone the repository
-    git clone https://github.com/trohitg/MachinaOs.git
+    git clone https://github.com/trohitg/MachinaOS.git
     cd MachinaOs
 
     # Install dependencies
-    npm install
+    npm run build
 
-    # Start development server
-    npm run dev
+    # Start all services
+    npm run start
     ```
 
     The app will be available at:
     - Frontend: `http://localhost:3000`
     - Backend: `http://localhost:3010`
+    - WhatsApp: `http://localhost:9400`
   </Tab>
-  <Tab title="Docker (Production)">
+  <Tab title="Docker (Recommended)">
     ```bash
     # Clone the repository
-    git clone https://github.com/trohitg/MachinaOs.git
+    git clone https://github.com/trohitg/MachinaOS.git
     cd MachinaOs
 
-    # Start all services
-    docker-compose up -d
+    # Build and start all services
+    npm run docker:build
+    npm run docker:up
     ```
 
     This starts 4 containers:
     - **frontend** - React app (port 3000)
     - **backend** - FastAPI server (port 3010)
     - **whatsapp** - Go WhatsApp service (port 9400)
-    - **redis** - Cache (port 6379, optional)
+    - **redis** - Cache (port 6379, when enabled)
   </Tab>
 </Tabs>
 
