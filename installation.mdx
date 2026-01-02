@@ -1,0 +1,158 @@
+---
+title: Installation
+description: Set up MachinaOs on your local machine or server
+---
+
+# Installation
+
+MachinaOs can be installed using npm for development or Docker for production.
+
+## Prerequisites
+
+<Tabs>
+  <Tab title="Development">
+    - Node.js 18+
+    - Python 3.12+
+    - Git
+  </Tab>
+  <Tab title="Docker">
+    - Docker 20+
+    - Docker Compose 2+
+    - 2GB RAM minimum
+  </Tab>
+</Tabs>
+
+## Quick Install
+
+<Tabs>
+  <Tab title="npm (Development)">
+    ```bash
+    # Clone the repository
+    git clone https://github.com/trohitg/MachinaOs.git
+    cd MachinaOs
+
+    # Install dependencies
+    npm install
+
+    # Start development server
+    npm run dev
+    ```
+
+    The app will be available at:
+    - Frontend: `http://localhost:3000`
+    - Backend: `http://localhost:3010`
+  </Tab>
+  <Tab title="Docker (Production)">
+    ```bash
+    # Clone the repository
+    git clone https://github.com/trohitg/MachinaOs.git
+    cd MachinaOs
+
+    # Start all services
+    docker-compose up -d
+    ```
+
+    This starts 4 containers:
+    - **frontend** - React app (port 3000)
+    - **backend** - FastAPI server (port 3010)
+    - **whatsapp** - Go WhatsApp service (port 9400)
+    - **redis** - Cache (port 6379, optional)
+  </Tab>
+</Tabs>
+
+## Environment Configuration
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+### Key Settings
+
+<ParamField path="VITE_CLIENT_PORT" type="number" default="3000">
+  Frontend development server port
+</ParamField>
+
+<ParamField path="PYTHON_BACKEND_PORT" type="number" default="3010">
+  Backend API server port
+</ParamField>
+
+<ParamField path="AUTH_MODE" type="string" default="single">
+  Authentication mode: `single` (first user is owner) or `multi` (open registration)
+</ParamField>
+
+<ParamField path="REDIS_ENABLED" type="boolean" default="false">
+  Enable Redis cache. Set to `true` for production.
+</ParamField>
+
+<ParamField path="VITE_ANDROID_RELAY_URL" type="string">
+  WebSocket URL for remote Android device connections
+</ParamField>
+
+### Full Environment Example
+
+```bash
+# Ports
+VITE_CLIENT_PORT=3000
+PYTHON_BACKEND_PORT=3010
+
+# Authentication
+AUTH_MODE=single
+JWT_SECRET_KEY=your-secret-key-min-32-chars
+
+# Cache (production)
+REDIS_ENABLED=false
+REDIS_URL=redis://localhost:6379
+
+# Optional API Keys
+OPENAI_API_KEY=
+ANTHROPIC_API_KEY=
+GOOGLE_AI_API_KEY=
+GOOGLE_MAPS_API_KEY=
+```
+
+## Verify Installation
+
+1. Open `http://localhost:3000` in your browser
+2. You should see the MachinaOs workflow editor
+3. Check the backend health: `curl http://localhost:3010/health`
+
+<Check>
+If you see the workflow canvas with the component palette, installation is complete!
+</Check>
+
+## Troubleshooting
+
+<Accordion title="Port already in use">
+  Change the port in `.env`:
+  ```bash
+  VITE_CLIENT_PORT=3001
+  PYTHON_BACKEND_PORT=3011
+  ```
+</Accordion>
+
+<Accordion title="Python dependencies fail">
+  Create a virtual environment:
+  ```bash
+  cd server
+  python -m venv venv
+  source venv/bin/activate  # or venv\Scripts\activate on Windows
+  pip install -r requirements.txt
+  ```
+</Accordion>
+
+<Accordion title="Docker containers won't start">
+  Check logs and rebuild:
+  ```bash
+  docker-compose logs -f
+  docker-compose down
+  docker-compose up --build -d
+  ```
+</Accordion>
+
+## Next Steps
+
+<Card title="Quick Start" icon="rocket" href="/quickstart">
+  Build your first workflow in 5 minutes
+</Card>

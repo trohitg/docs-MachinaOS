@@ -1,0 +1,309 @@
+---
+title: FAQ
+description: Frequently asked questions about MachinaOs
+---
+
+# Frequently Asked Questions
+
+Common questions and troubleshooting for MachinaOs.
+
+## General
+
+<AccordionGroup>
+  <Accordion title="What is MachinaOs?">
+    MachinaOs is an open-source workflow automation platform inspired by n8n. It lets you create visual workflows that connect AI models, messaging services, devices, and APIs using a drag-and-drop interface.
+  </Accordion>
+
+  <Accordion title="Is MachinaOs free to use?">
+    Yes, MachinaOs is open-source and free to self-host. You only pay for external services you use (AI API calls, cloud hosting, etc.).
+  </Accordion>
+
+  <Accordion title="What's the difference between MachinaOs and n8n?">
+    MachinaOs is inspired by n8n's node-based approach but focuses on:
+    - Deep AI integration (OpenAI, Claude, Gemini with memory)
+    - WhatsApp automation
+    - Android device control
+    - Real-time WebSocket communication
+
+    MachinaOs is built with React and Python, while n8n uses Node.js.
+  </Accordion>
+
+  <Accordion title="Can I use MachinaOs commercially?">
+    Yes, MachinaOs is released under an open-source license. Check the repository for specific license terms.
+  </Accordion>
+</AccordionGroup>
+
+## Installation
+
+<AccordionGroup>
+  <Accordion title="What are the system requirements?">
+    **Minimum:**
+    - 2GB RAM
+    - 2 CPU cores
+    - 10GB disk space
+
+    **Recommended:**
+    - 4GB+ RAM
+    - 4+ CPU cores
+    - SSD storage
+  </Accordion>
+
+  <Accordion title="Can I run MachinaOs on Windows?">
+    Yes, using Docker Desktop for Windows or WSL2. Native development is also supported with Node.js and Python installed.
+  </Accordion>
+
+  <Accordion title="How do I update MachinaOs?">
+    ```bash
+    cd MachinaOs
+    git pull
+    docker-compose down
+    docker-compose up --build -d
+    ```
+  </Accordion>
+
+  <Accordion title="Port 3000 is already in use">
+    Change the port in your `.env` file:
+    ```
+    VITE_CLIENT_PORT=3001
+    ```
+    Then restart the services.
+  </Accordion>
+</AccordionGroup>
+
+## Workflows
+
+<AccordionGroup>
+  <Accordion title="What's the difference between Save and Deploy?">
+    - **Save**: Persists your workflow to the database. The workflow is not running.
+    - **Deploy**: Activates triggers and starts listening for events. Required for cron schedules, webhooks, and message triggers.
+  </Accordion>
+
+  <Accordion title="Why isn't my trigger node firing?">
+    1. Make sure the workflow is **deployed** (not just saved)
+    2. Check if filters are too restrictive
+    3. Verify external services are connected (WhatsApp, Android)
+    4. Check backend logs for errors
+  </Accordion>
+
+  <Accordion title="How do I pass data between nodes?">
+    Use template variables:
+    ```
+    {{nodeName.fieldName}}
+    ```
+    Example: `{{webhookTrigger.body.message}}`
+  </Accordion>
+
+  <Accordion title="Can I run multiple workflows simultaneously?">
+    Yes, each deployed workflow runs independently. Multiple workflows can have triggers active at the same time.
+  </Accordion>
+
+  <Accordion title="How do I debug a workflow?">
+    1. Use the **Run** button on individual nodes to test them
+    2. Check the output panel for node results
+    3. Add Python Executor nodes with `print()` statements
+    4. Check backend logs: `docker-compose logs -f backend`
+  </Accordion>
+</AccordionGroup>
+
+## AI Integration
+
+<AccordionGroup>
+  <Accordion title="Where do I add my API keys?">
+    Click the **key icon** in the toolbar to open the Credentials panel. Add keys for:
+    - OpenAI
+    - Anthropic (Claude)
+    - Google AI (Gemini)
+    - Google Maps
+    - Android Remote
+  </Accordion>
+
+  <Accordion title="Are my API keys secure?">
+    Yes, API keys are:
+    - Encrypted before storage
+    - Stored locally in SQLite
+    - Never sent to MachinaOs servers
+    - Only transmitted to the respective AI providers
+  </Accordion>
+
+  <Accordion title="How does conversation memory work?">
+    The Simple Memory node stores messages in SQLite by session ID. Connect it to an AI Agent's memory handle (diamond shape) to enable multi-turn conversations.
+  </Accordion>
+
+  <Accordion title="Which AI model should I use?">
+    | Use Case | Recommended |
+    |----------|-------------|
+    | General chat | GPT-4o, Claude 3.5 Sonnet |
+    | Complex reasoning | Claude 3 Opus, GPT-4 Turbo |
+    | Fast responses | GPT-3.5 Turbo, Claude Haiku |
+    | Long context | Gemini 1.5 Pro |
+    | Cost-effective | GPT-3.5 Turbo |
+  </Accordion>
+</AccordionGroup>
+
+## WhatsApp
+
+<AccordionGroup>
+  <Accordion title="How do I connect WhatsApp?">
+    1. Click the WhatsApp/Android icon in the toolbar
+    2. A QR code appears
+    3. Open WhatsApp on your phone
+    4. Go to Settings > Linked Devices > Link a Device
+    5. Scan the QR code
+  </Accordion>
+
+  <Accordion title="WhatsApp disconnects frequently">
+    - Ensure your phone has stable internet
+    - Don't use WhatsApp Web simultaneously
+    - Keep the MachinaOs server running continuously
+    - Check if you're logged out on your phone
+  </Accordion>
+
+  <Accordion title="Can I use WhatsApp Business?">
+    Yes, WhatsApp Business accounts work the same way as regular accounts.
+  </Accordion>
+
+  <Accordion title="How do I send to groups?">
+    Use the group's JID (ends with `@g.us`) as the recipient. The WhatsApp Receive node provides `group_info.group_jid` for incoming group messages.
+  </Accordion>
+</AccordionGroup>
+
+## Android
+
+<AccordionGroup>
+  <Accordion title="How do I connect an Android device?">
+    **Local (USB):**
+    1. Enable Developer Options and USB Debugging on your phone
+    2. Connect via USB
+    3. Run `adb devices` to verify
+    4. Select device in Android Device Setup node
+
+    **Remote:**
+    1. Configure relay URL in .env
+    2. Add API key in Credentials
+    3. Install companion app on device
+    4. Scan QR code to pair
+  </Accordion>
+
+  <Accordion title="ADB device not detected">
+    ```bash
+    # Check connection
+    adb devices
+
+    # Restart ADB
+    adb kill-server
+    adb start-server
+
+    # Try different USB cable/port
+    ```
+    Also ensure USB debugging is enabled in Developer Options.
+  </Accordion>
+
+  <Accordion title="Some actions require root access">
+    Some Android automation features require root or special permissions:
+    - Airplane mode toggle
+    - Some system settings
+    - Protected app access
+
+    Use automation apps like Tasker for restricted features.
+  </Accordion>
+</AccordionGroup>
+
+## Webhooks
+
+<AccordionGroup>
+  <Accordion title="What's my webhook URL?">
+    Local: `http://localhost:3010/webhook/{path}`
+    Production: `https://your-domain.com/webhook/{path}`
+
+    Replace `{path}` with the path you set in the Webhook Trigger node.
+  </Accordion>
+
+  <Accordion title="Webhook returns 404">
+    - Verify the workflow is **deployed**
+    - Check the path matches exactly (case-sensitive)
+    - Ensure backend is running on the correct port
+  </Accordion>
+
+  <Accordion title="How do I secure my webhooks?">
+    Use authentication in the Webhook Trigger node:
+    - Basic auth (username/password)
+    - Bearer token
+    - API key header
+  </Accordion>
+</AccordionGroup>
+
+## Deployment
+
+<AccordionGroup>
+  <Accordion title="Can I deploy without Docker?">
+    Yes, but it's more complex:
+    1. Install Node.js 18+ and Python 3.12+
+    2. Install dependencies: `npm install` and `pip install -r requirements.txt`
+    3. Build frontend: `npm run build`
+    4. Run backend: `uvicorn main:app`
+    5. Serve frontend with nginx
+
+    Docker is recommended for easier deployment.
+  </Accordion>
+
+  <Accordion title="How much does hosting cost?">
+    MachinaOs can run on a small VPS:
+    - DigitalOcean: ~$6/month (1GB RAM)
+    - AWS EC2: ~$10/month (t3.micro)
+    - Self-hosted: Hardware cost only
+
+    Plus costs for AI API calls and domain/SSL.
+  </Accordion>
+
+  <Accordion title="How do I backup my data?">
+    ```bash
+    # Backup SQLite database
+    docker cp machinaos-backend-1:/app/data ./backup/
+
+    # Backup WhatsApp session
+    docker cp machinaos-whatsapp-1:/app/data ./backup/whatsapp/
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Frontend shows blank page">
+    - Check browser console for errors
+    - Verify frontend container is running
+    - Clear browser cache
+    - Check if ports are blocked by firewall
+  </Accordion>
+
+  <Accordion title="WebSocket connection fails">
+    - Verify backend is running
+    - Check nginx WebSocket proxy configuration
+    - Ensure no firewall blocks WebSocket (port 3010)
+    - Check CORS settings in .env
+  </Accordion>
+
+  <Accordion title="High memory usage">
+    - Restart containers: `docker-compose restart`
+    - Check for runaway workflows
+    - Limit conversation memory window size
+    - Increase server RAM if needed
+  </Accordion>
+
+  <Accordion title="Database locked error">
+    SQLite doesn't handle concurrent writes well. If you see "database is locked":
+    - Restart backend container
+    - Consider migrating to PostgreSQL for production
+  </Accordion>
+</AccordionGroup>
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Issues" icon="github" href="https://github.com/trohitg/MachinaOs/issues">
+    Report bugs and request features
+  </Card>
+  <Card title="Documentation" icon="book" href="/introduction">
+    Browse the full documentation
+  </Card>
+</CardGroup>

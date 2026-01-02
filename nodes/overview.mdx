@@ -1,0 +1,181 @@
+---
+title: Node Overview
+description: Understanding MachinaOs nodes and how they connect
+---
+
+# Node Overview
+
+MachinaOs uses a visual node-based system for building workflows. Each node performs a specific function and passes data to connected nodes.
+
+## Node Categories
+
+| Category | Count | Description |
+|----------|-------|-------------|
+| [AI Models](/nodes/ai-models) | 3 | Chat models from OpenAI, Anthropic, Google |
+| [AI Agents](/nodes/ai-agent) | 2 | Intelligent agents with memory |
+| [WhatsApp](/nodes/whatsapp) | 3 | Messaging automation |
+| [Android](/nodes/android) | 17 | Device control and monitoring |
+| [Webhooks](/nodes/webhooks) | 3 | HTTP requests and webhook handling |
+| [Schedulers](/nodes/schedulers) | 3 | Triggers and timing |
+
+## Node Shapes
+
+Different shapes indicate different node types:
+
+| Shape | Type | Description |
+|-------|------|-------------|
+| Diamond | Trigger | Starts a workflow (no input handle) |
+| Square | Action | Performs operations |
+| Circle | Config | Provides configuration to other nodes |
+
+## Handles
+
+Handles are connection points on nodes:
+
+### Input Handles (Left Side)
+- **Main Input** - Receives data from upstream nodes
+- **Config Inputs** - Diamond shapes for memory, model, etc.
+
+### Output Handles (Right Side)
+- **Main Output** - Sends data to downstream nodes
+
+## Data Flow
+
+Data flows from left to right through connections:
+
+```
+[Trigger] --> [Process] --> [Action] --> [Response]
+```
+
+### Template Variables
+
+Access upstream data using template syntax:
+
+```
+{{nodeName.fieldName}}
+```
+
+**Examples:**
+```
+{{webhookTrigger.body}}           // Webhook request body
+{{openaiChatModel.response}}      // AI model response
+{{batteryMonitor.level}}          // Battery percentage
+{{whatsappReceive.text}}          // Message content
+```
+
+### Nested Fields
+
+Access nested objects with dot notation:
+
+```
+{{whatsappReceive.group_info.sender_name}}
+{{webhookTrigger.body.user.email}}
+```
+
+## Node Configuration
+
+### Opening Parameters
+1. **Click** the node to select it
+2. **Click gear icon** or **double-click** to open parameter panel
+
+### Parameter Types
+
+| Type | Description |
+|------|-------------|
+| Text | String input |
+| Number | Numeric input |
+| Boolean | Toggle on/off |
+| Options | Dropdown selection |
+| Slider | Range selection |
+| Code | Multi-line code editor |
+| JSON | JSON object input |
+
+### Dynamic Options
+
+Some parameters load options from the backend:
+- Device lists (Android)
+- AI models (based on API key)
+- Groups and contacts (WhatsApp)
+
+## Node States
+
+During execution, nodes show their state:
+
+| State | Indicator | Description |
+|-------|-----------|-------------|
+| Idle | Default | Not running |
+| Waiting | Cyan | Trigger waiting for event |
+| Running | Purple glow | Currently executing |
+| Completed | Green | Finished successfully |
+| Error | Red | Failed with error |
+
+## Special Node Types
+
+### Trigger Nodes
+- No input handle
+- Start workflow execution
+- Wait for external events
+
+**Examples:** Webhook Trigger, WhatsApp Receive, Cron Scheduler
+
+### Config Nodes
+- Connect to special config handles (diamonds)
+- Provide settings to parent nodes
+- Don't execute independently
+
+**Examples:** Simple Memory, AI Models
+
+## Renaming Nodes
+
+Give nodes meaningful names:
+1. Press **F2** with node selected
+2. Or **double-click** the node label
+3. Or **right-click** > Rename
+
+## Copying Nodes
+
+1. Select node(s)
+2. Press **Ctrl+C** to copy
+3. Press **Ctrl+V** to paste
+
+## Deleting Nodes
+
+1. Select node(s)
+2. Press **Delete** or **Backspace**
+
+## Best Practices
+
+<Tip>
+Name your nodes descriptively. "Process Order" is better than "AI Agent 1".
+</Tip>
+
+<Tip>
+Test individual nodes with the **Run** button before deploying full workflows.
+</Tip>
+
+<Warning>
+Config nodes (Memory, Models) connect to diamond handles, not main inputs.
+</Warning>
+
+## Node Reference
+
+<CardGroup cols={2}>
+  <Card title="AI Models" icon="brain" href="/nodes/ai-models">
+    OpenAI, Claude, Gemini
+  </Card>
+  <Card title="AI Agents" icon="robot" href="/nodes/ai-agent">
+    Agent with memory and tools
+  </Card>
+  <Card title="WhatsApp" icon="whatsapp" href="/nodes/whatsapp">
+    Send and receive messages
+  </Card>
+  <Card title="Android" icon="mobile" href="/nodes/android">
+    17 device control nodes
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
+    HTTP and webhook handling
+  </Card>
+  <Card title="Schedulers" icon="clock" href="/nodes/schedulers">
+    Triggers and timers
+  </Card>
+</CardGroup>

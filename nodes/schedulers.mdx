@@ -1,0 +1,316 @@
+---
+title: Schedulers & Triggers
+description: Start workflows on schedules, timers, and manual triggers
+---
+
+# Schedulers & Triggers
+
+Control when and how workflows start execution.
+
+## Available Nodes
+
+| Node | Type | Purpose |
+|------|------|---------|
+| Workflow Trigger | Trigger | Manual workflow start |
+| Cron Scheduler | Trigger | Run on cron schedule |
+| Timer | Action | Delay execution |
+| Python Executor | Action | Run Python code |
+
+---
+
+## Workflow Trigger
+
+Manually start a workflow with the Run button.
+
+### Use Cases
+
+- Testing workflows during development
+- On-demand execution
+- Entry point for manual processes
+
+### Output
+
+```json
+{
+  "triggered_at": "2024-01-15T10:30:00Z",
+  "trigger_type": "manual"
+}
+```
+
+<Info>
+Every workflow needs at least one trigger node to start execution.
+</Info>
+
+---
+
+## Cron Scheduler
+
+Run workflows on a schedule using cron expressions.
+
+### Parameters
+
+<ParamField path="cronExpression" type="string" required>
+  Cron expression defining the schedule
+</ParamField>
+
+<ParamField path="timezone" type="string" default="UTC">
+  Timezone for schedule execution
+</ParamField>
+
+### Cron Expression Format
+
+```
+* * * * *
+│ │ │ │ │
+│ │ │ │ └── Day of week (0-7, Sun=0 or 7)
+│ │ │ └──── Month (1-12)
+│ │ └────── Day of month (1-31)
+│ └──────── Hour (0-23)
+└────────── Minute (0-59)
+```
+
+### Common Expressions
+
+| Expression | Description |
+|------------|-------------|
+| `* * * * *` | Every minute |
+| `*/5 * * * *` | Every 5 minutes |
+| `0 * * * *` | Every hour |
+| `0 0 * * *` | Daily at midnight |
+| `0 9 * * 1-5` | Weekdays at 9am |
+| `0 0 1 * *` | First day of month |
+| `0 12 * * 0` | Sundays at noon |
+
+### Output
+
+```json
+{
+  "triggered_at": "2024-01-15T09:00:00Z",
+  "trigger_type": "cron",
+  "expression": "0 9 * * *",
+  "next_run": "2024-01-16T09:00:00Z"
+}
+```
+
+### Example: Daily Report
+
+```
+[Cron (0 9 * * *)] --> [HTTP Request] --> [AI Summary] --> [WhatsApp Send]
+                        (fetch data)                         (send report)
+```
+
+---
+
+## Timer
+
+Add a delay between nodes.
+
+### Parameters
+
+<ParamField path="delay" type="number" required>
+  Delay duration
+</ParamField>
+
+<ParamField path="unit" type="select" default="seconds">
+  Time unit: seconds, minutes, hours
+</ParamField>
+
+### Use Cases
+
+- Rate limiting API calls
+- Waiting for external processes
+- Scheduling sequential actions
+
+### Example: Rate-Limited API Calls
+
+```
+[For Each Item] --> [HTTP Request] --> [Timer (1s)] --> [Next Item]
+```
+
+### Output
+
+```json
+{
+  "delayed": true,
+  "duration_ms": 5000,
+  "completed_at": "2024-01-15T10:30:05Z"
+}
+```
+
+---
+
+## Python Executor
+
+Run custom Python code within workflows.
+
+### Parameters
+
+<ParamField path="code" type="code" required>
+  Python code to execute
+</ParamField>
+
+### Available Variables
+
+| Variable | Description |
+|----------|-------------|
+| `input_data` | Data from connected input node |
+| `output` | Dictionary to set as node output |
+
+### Example: Data Processing
+
+```python
+# Access input data
+message = input_data.get("text", "")
+
+# Process
+word_count = len(message.split())
+has_question = "?" in message
+
+# Set output
+output = {
+    "word_count": word_count,
+    "has_question": has_question,
+    "summary": f"Message has {word_count} words"
+}
+```
+
+### Example: Conditional Logic
+
+```python
+level = input_data.get("battery_level", 100)
+is_charging = input_data.get("is_charging", False)
+
+if level < 20 and not is_charging:
+    output = {
+        "action": "alert",
+        "message": f"Low battery: {level}%"
+    }
+else:
+    output = {
+        "action": "none"
+    }
+```
+
+### Example: API Response Formatting
+
+```python
+import json
+
+# Parse response
+data = input_data.get("data", {})
+items = data.get("items", [])
+
+# Format for output
+formatted = []
+for item in items:
+    formatted.append({
+        "name": item.get("name"),
+        "price": f"${item.get('price', 0):.2f}"
+    })
+
+output = {
+    "count": len(formatted),
+    "items": formatted
+}
+```
+
+### Available Libraries
+
+The Python executor includes common libraries:
+- `json` - JSON parsing
+- `datetime` - Date/time handling
+- `re` - Regular expressions
+- `math` - Mathematical functions
+
+<Warning>
+Code runs in a sandboxed environment. File system and network access are restricted.
+</Warning>
+
+---
+
+## Combining Schedulers
+
+### Schedule with Delay
+
+```
+[Cron (hourly)] --> [HTTP Request] --> [Timer (5s)] --> [HTTP Request #2]
+```
+
+### Multiple Schedules
+
+Deploy workflows with different schedules:
+
+```
+Workflow 1: [Cron (daily)] --> [Daily Report]
+Workflow 2: [Cron (hourly)] --> [Hourly Check]
+Workflow 3: [Webhook] --> [On-Demand Action]
+```
+
+---
+
+## Workflow States
+
+After deployment, trigger nodes show their state:
+
+| State | Color | Description |
+|-------|-------|-------------|
+| Idle | Default | Waiting for next trigger |
+| Waiting | Cyan | Actively waiting for event |
+| Running | Purple | Workflow executing |
+
+---
+
+## Tips
+
+<Tip>
+Test cron expressions at [crontab.guru](https://crontab.guru) before deploying.
+</Tip>
+
+<Tip>
+Use **Python Executor** for conditional logic instead of multiple workflow branches.
+</Tip>
+
+<Tip>
+Add **Timer** nodes when calling rate-limited APIs repeatedly.
+</Tip>
+
+<Warning>
+Cron schedules are in **UTC** by default. Set timezone if needed.
+</Warning>
+
+---
+
+## Troubleshooting
+
+<Accordion title="Cron not triggering">
+  - Verify workflow is **deployed** (not just saved)
+  - Check cron expression syntax
+  - Ensure timezone is correct
+  - Check server logs for errors
+</Accordion>
+
+<Accordion title="Python code fails">
+  - Check for syntax errors
+  - Verify `input_data` has expected fields
+  - Use `try/except` for error handling
+  - Print debug info with `print()` (shows in logs)
+</Accordion>
+
+<Accordion title="Timer not working">
+  - Ensure delay value is positive
+  - Check unit (seconds vs minutes)
+  - Verify node is connected properly
+</Accordion>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
+    Trigger workflows via HTTP
+  </Card>
+  <Card title="WhatsApp" icon="whatsapp" href="/nodes/whatsapp">
+    Message-triggered workflows
+  </Card>
+</CardGroup>

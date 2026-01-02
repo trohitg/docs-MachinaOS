@@ -1,0 +1,236 @@
+---
+title: AI Chat Models
+description: OpenAI, Anthropic Claude, and Google Gemini integration
+---
+
+# AI Chat Models
+
+MachinaOs supports three major AI providers for chat completions.
+
+## Available Models
+
+### OpenAI
+| Model | Best For |
+|-------|----------|
+| gpt-4o | General purpose, fast |
+| gpt-4-turbo | Complex reasoning |
+| gpt-3.5-turbo | Simple tasks, cost-effective |
+
+### Anthropic Claude
+| Model | Best For |
+|-------|----------|
+| claude-3.5-sonnet | Balanced performance |
+| claude-3.5-haiku | Fast responses |
+| claude-3-opus | Complex analysis |
+
+### Google Gemini
+| Model | Best For |
+|-------|----------|
+| gemini-1.5-pro | Long context, multimodal |
+| gemini-1.5-flash | Speed-optimized |
+
+## Adding API Keys
+
+1. Click the **key icon** in the toolbar
+2. Select the provider
+3. Enter your API key
+4. Click **Validate** to test
+
+<Info>
+API keys are encrypted and stored locally. They're never sent to MachinaOs servers.
+</Info>
+
+## OpenAI Chat Model
+
+### Parameters
+
+<ParamField path="model" type="select" required>
+  The model to use (gpt-4o, gpt-4-turbo, gpt-3.5-turbo)
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The message to send. Supports template variables.
+</ParamField>
+
+<ParamField path="temperature" type="slider" default="0.7">
+  Randomness (0 = deterministic, 1 = creative)
+</ParamField>
+
+<ParamField path="maxTokens" type="number" default="1000">
+  Maximum response length
+</ParamField>
+
+<ParamField path="responseFormat" type="select" default="text">
+  Output format: text or json_object
+</ParamField>
+
+### Output
+
+```json
+{
+  "response": "The AI's response text",
+  "model": "gpt-4o",
+  "usage": {
+    "prompt_tokens": 50,
+    "completion_tokens": 100,
+    "total_tokens": 150
+  }
+}
+```
+
+### Example
+
+```
+Prompt: Summarize this in 2 sentences: {{webhookTrigger.body.text}}
+Temperature: 0.3
+Max Tokens: 200
+```
+
+## Anthropic Claude Model
+
+### Parameters
+
+<ParamField path="model" type="select" required>
+  Claude model (claude-3.5-sonnet, claude-3.5-haiku, claude-3-opus)
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The message to send
+</ParamField>
+
+<ParamField path="systemPrompt" type="string">
+  System instructions for the model
+</ParamField>
+
+<ParamField path="temperature" type="slider" default="0.7">
+  Randomness (0-1)
+</ParamField>
+
+<ParamField path="maxTokens" type="number" default="1000">
+  Maximum response length
+</ParamField>
+
+### Output
+
+```json
+{
+  "response": "Claude's response",
+  "model": "claude-3.5-sonnet",
+  "stop_reason": "end_turn"
+}
+```
+
+### Example
+
+```
+System Prompt: You are a helpful coding assistant.
+Prompt: Explain this error: {{webhookTrigger.body.error}}
+```
+
+## Google Gemini Model
+
+### Parameters
+
+<ParamField path="model" type="select" required>
+  Gemini model (gemini-1.5-pro, gemini-1.5-flash)
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The message to send
+</ParamField>
+
+<ParamField path="temperature" type="slider" default="0.7">
+  Randomness (0-1)
+</ParamField>
+
+<ParamField path="maxTokens" type="number" default="1000">
+  Maximum response length
+</ParamField>
+
+<ParamField path="safetySettings" type="select" default="default">
+  Content safety level
+</ParamField>
+
+### Output
+
+```json
+{
+  "response": "Gemini's response",
+  "model": "gemini-1.5-pro"
+}
+```
+
+## Comparing Providers
+
+| Feature | OpenAI | Claude | Gemini |
+|---------|--------|--------|--------|
+| Speed | Fast | Medium | Fast |
+| Reasoning | Good | Excellent | Good |
+| Context Window | 128K | 200K | 1M |
+| Multimodal | Yes | Yes | Yes |
+| JSON Mode | Yes | No | No |
+
+## Common Use Cases
+
+### Text Generation
+```
+Prompt: Write a product description for: {{input.product_name}}
+Temperature: 0.8
+```
+
+### Data Extraction
+```
+Prompt: Extract the email and phone from: {{input.text}}
+Response Format: json_object
+Temperature: 0
+```
+
+### Translation
+```
+Prompt: Translate to Spanish: {{input.text}}
+Temperature: 0.3
+```
+
+### Summarization
+```
+Prompt: Summarize in 3 bullet points: {{input.article}}
+Temperature: 0.3
+Max Tokens: 200
+```
+
+## Tips
+
+<Tip>
+Use **temperature 0** for deterministic outputs like data extraction.
+</Tip>
+
+<Tip>
+Use **temperature 0.7-0.9** for creative writing tasks.
+</Tip>
+
+<Tip>
+Enable **JSON mode** (OpenAI) when you need structured output.
+</Tip>
+
+<Warning>
+API calls cost money. Monitor your usage in your provider's dashboard.
+</Warning>
+
+## Error Handling
+
+| Error | Cause | Solution |
+|-------|-------|----------|
+| 401 Unauthorized | Invalid API key | Check/update API key |
+| 429 Rate Limited | Too many requests | Add delay, reduce frequency |
+| 500 Server Error | Provider issue | Retry later |
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="AI Agent" icon="robot" href="/nodes/ai-agent">
+    Use models with memory and tools
+  </Card>
+  <Card title="AI Tutorial" icon="graduation-cap" href="/tutorials/ai-agent-workflow">
+    Build an AI-powered workflow
+  </Card>
+</CardGroup>

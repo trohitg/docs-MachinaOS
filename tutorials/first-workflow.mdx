@@ -1,0 +1,134 @@
+---
+title: Your First Workflow
+description: Learn the basics of building workflows in MachinaOs
+---
+
+# Your First Workflow
+
+This tutorial covers the fundamentals of creating workflows in MachinaOs.
+
+## Understanding the Interface
+
+### Canvas
+The main area where you build workflows by connecting nodes.
+
+### Component Palette
+Left sidebar with all available nodes organized by category:
+- **AI Models** - Chat models (OpenAI, Claude, Gemini)
+- **AI Agents** - Agent and memory nodes
+- **WhatsApp** - Messaging automation
+- **Android** - Device control
+- **Utilities** - HTTP, webhooks, code execution
+- **Schedulers** - Triggers and timers
+
+### Toolbar
+Top bar with workflow controls:
+- **File** - New, Open, Save, Export
+- **Run** - Execute selected node
+- **Deploy** - Start workflow triggers
+- **Stop** - Cancel execution
+
+## Node Basics
+
+### Adding Nodes
+1. **Drag and drop** from the component palette
+2. **Right-click** on canvas to search nodes
+
+### Connecting Nodes
+- Drag from an **output handle** (right side) to an **input handle** (left side)
+- Handles are the small circles on node edges
+
+### Node Types
+
+| Type | Shape | Description |
+|------|-------|-------------|
+| Trigger | Diamond | Start workflow on events |
+| Action | Square | Perform operations |
+| Config | Circle | Provide configuration to other nodes |
+
+### Configuring Nodes
+1. Click a node to select it
+2. Click the **gear icon** or double-click to open parameters
+3. Set values and click **Save**
+
+## Data Flow
+
+Data flows through connections between nodes. Use template variables to access upstream data:
+
+```
+{{nodeName.outputField}}
+```
+
+### Example
+If a Webhook Trigger outputs `{ body: "Hello" }`:
+
+```
+{{webhookTrigger.body}}  -->  "Hello"
+```
+
+## Building a Simple Workflow
+
+Let's build a workflow that triggers on a schedule and logs the time.
+
+### Step 1: Add a Cron Trigger
+
+1. Drag **Cron Scheduler** from Schedulers
+2. Configure:
+   ```
+   Cron Expression: */5 * * * *  (every 5 minutes)
+   ```
+
+### Step 2: Add a Python Executor
+
+1. Drag **Python Executor** from Utilities
+2. Connect Cron output to Python input
+3. Add this code:
+
+```python
+from datetime import datetime
+
+current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+output = {"time": current_time, "message": f"Triggered at {current_time}"}
+```
+
+### Step 3: Deploy
+
+1. Click **Deploy** in the toolbar
+2. The workflow will run every 5 minutes
+3. Click **Stop** to cancel
+
+## Keyboard Shortcuts
+
+| Shortcut | Action |
+|----------|--------|
+| `Ctrl+N` | New workflow |
+| `Ctrl+S` | Save workflow |
+| `F2` | Rename selected node |
+| `Delete` | Delete selected node |
+| `Ctrl+C` | Copy node |
+| `Ctrl+V` | Paste node |
+
+## Tips
+
+<Tip>
+**Rename nodes** for clarity. Press `F2` or double-click the node label.
+</Tip>
+
+<Tip>
+**Test individual nodes** by selecting them and clicking **Run** before deploying the full workflow.
+</Tip>
+
+<Warning>
+Always **save your workflow** before deploying. Unsaved changes are lost on refresh.
+</Warning>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="AI Agent Workflow" icon="robot" href="/tutorials/ai-agent-workflow">
+    Build an intelligent agent with memory
+  </Card>
+  <Card title="Node Overview" icon="grid" href="/nodes/overview">
+    Learn about all node types
+  </Card>
+</CardGroup>

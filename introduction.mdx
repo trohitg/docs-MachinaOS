@@ -1,0 +1,86 @@
+---
+title: Introduction
+description: Visual workflow automation platform with AI agents, WhatsApp, and Android integration
+---
+
+# Welcome to MachinaOs
+
+MachinaOs is an open-source workflow automation platform inspired by n8n, built with React Flow and Python FastAPI. Create powerful automations using a visual node-based editor.
+
+<CardGroup cols={2}>
+  <Card title="35+ Nodes" icon="cube">
+    AI models, WhatsApp, Android automation, webhooks, and more
+  </Card>
+  <Card title="Real-time Execution" icon="bolt">
+    WebSocket-first architecture with live status updates
+  </Card>
+  <Card title="AI-Powered" icon="brain">
+    Integrate OpenAI, Claude, and Gemini with memory and tools
+  </Card>
+  <Card title="Self-Hosted" icon="server">
+    Full control over your data with Docker deployment
+  </Card>
+</CardGroup>
+
+## Key Features
+
+### AI Integration
+Connect to leading AI providers with built-in support for conversation memory and tool calling.
+
+- **OpenAI** - GPT-4o, GPT-4 Turbo, GPT-3.5
+- **Anthropic** - Claude 3.5 Sonnet, Claude 3 Opus
+- **Google** - Gemini 1.5 Pro, Gemini 1.5 Flash
+
+### WhatsApp Automation
+Send and receive WhatsApp messages with event-driven triggers.
+
+- QR code pairing
+- Message filtering by sender, group, or keywords
+- Media support
+
+### Android Device Control
+Automate Android devices via ADB or remote WebSocket relay.
+
+- 17 service nodes (battery, WiFi, Bluetooth, camera, etc.)
+- App launching and system monitoring
+- Sensor data access
+
+### Webhooks & HTTP
+Receive incoming webhooks and make HTTP requests to external APIs.
+
+- Dynamic webhook endpoints
+- Full HTTP method support
+- Custom response handling
+
+## Quick Links
+
+<CardGroup cols={2}>
+  <Card title="Installation" icon="download" href="/installation">
+    Get MachinaOs running locally in minutes
+  </Card>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Build your first workflow in 5 minutes
+  </Card>
+  <Card title="Node Catalog" icon="grid" href="/nodes/overview">
+    Explore all available nodes
+  </Card>
+  <Card title="Tutorials" icon="graduation-cap" href="/tutorials/first-workflow">
+    Step-by-step guides
+  </Card>
+</CardGroup>
+
+## Architecture Overview
+
+MachinaOs uses a modern tech stack:
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19, TypeScript, React Flow, Zustand |
+| Backend | Python FastAPI, SQLAlchemy, LangChain |
+| Real-time | WebSocket (25 message types) |
+| Database | SQLite (dev), Redis (production cache) |
+| Deployment | Docker Compose, nginx reverse proxy |
+
+<Info>
+MachinaOs is designed for self-hosting. Your data stays on your infrastructure.
+</Info>

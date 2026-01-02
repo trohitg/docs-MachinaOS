@@ -1,0 +1,177 @@
+---
+title: AI Agent Workflow
+description: Build an AI agent with conversation memory and tools
+---
+
+# AI Agent Workflow
+
+Create an intelligent AI agent that remembers conversation history and can use tools.
+
+## What You'll Build
+
+A chatbot that:
+- Maintains conversation context across messages
+- Uses an AI model (OpenAI, Claude, or Gemini)
+- Responds via webhook
+
+## Prerequisites
+
+- MachinaOs running locally
+- An AI provider API key (OpenAI, Anthropic, or Google)
+
+## Step 1: Add the AI Agent
+
+1. Drag **AI Agent** from the AI Agents category
+2. This is the core of your intelligent assistant
+
+The AI Agent node has multiple input handles:
+- **Main Input** (left) - Receives the user prompt
+- **Memory Input** (bottom-left diamond) - Connects to memory nodes
+- **Model Input** (top) - Optional model override
+
+## Step 2: Connect a Chat Model
+
+1. Drag **OpenAI Chat Model** (or Claude/Gemini) onto the canvas
+2. Connect it to the AI Agent's model input (top handle)
+3. Configure the model:
+
+```
+Model: gpt-4o
+Temperature: 0.7
+Max Tokens: 1000
+```
+
+<Tip>
+You can use any AI provider. Claude excels at reasoning, Gemini handles multimodal input.
+</Tip>
+
+## Step 3: Add Conversation Memory
+
+1. Drag **Simple Memory** from AI Agents
+2. Connect it to the AI Agent's memory input (bottom-left diamond handle)
+3. Configure:
+
+```
+Session ID: default
+Memory Type: Buffer
+```
+
+### Memory Types
+
+| Type | Description |
+|------|-------------|
+| Buffer | Keeps all messages in the session |
+| Window | Keeps only the last N messages |
+
+<Info>
+Memory is stored in SQLite and persists across server restarts.
+</Info>
+
+## Step 4: Add a Webhook Trigger
+
+1. Drag **Webhook Trigger** from Utilities
+2. Connect its output to the AI Agent's main input
+3. Configure:
+
+```
+Path: chat
+Method: POST
+```
+
+## Step 5: Add a Webhook Response
+
+1. Drag **Webhook Response** from Utilities
+2. Connect the AI Agent's output to Webhook Response
+3. Configure:
+
+```
+Status Code: 200
+Body: {{aiAgent.response}}
+Content Type: application/json
+```
+
+## Complete Workflow
+
+```
+[Webhook Trigger] --> [AI Agent] --> [Webhook Response]
+                         ^
+                         |
+               [Simple Memory]
+                         ^
+                         |
+               [OpenAI Chat Model]
+```
+
+## Step 6: Configure the Agent Prompt
+
+Click on the AI Agent and set the system prompt:
+
+```
+You are a helpful assistant. You remember our conversation history.
+Be concise and friendly in your responses.
+```
+
+## Step 7: Deploy and Test
+
+1. Click **Deploy**
+2. Test with curl:
+
+```bash
+# First message
+curl -X POST http://localhost:3010/webhook/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hi, my name is Alex"}'
+
+# Second message (agent remembers your name)
+curl -X POST http://localhost:3010/webhook/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "What is my name?"}'
+```
+
+The agent should respond with your name, demonstrating memory!
+
+## Advanced: Multiple Sessions
+
+Use different session IDs for different conversations:
+
+```
+Session ID: {{webhookTrigger.body.user_id}}
+```
+
+This creates separate memory for each user.
+
+## Advanced: Window Memory
+
+For long conversations, use Window mode to limit memory:
+
+```
+Memory Type: Window
+Window Size: 10
+```
+
+This keeps only the last 10 message exchanges.
+
+## Troubleshooting
+
+<Accordion title="Agent doesn't remember previous messages">
+  - Ensure Simple Memory is connected to the memory input (diamond handle)
+  - Check that Session ID is consistent between requests
+  - Memory is saved after each exchange automatically
+</Accordion>
+
+<Accordion title="API key not found">
+  - Click the key icon in the toolbar
+  - Add your API key for the provider you're using
+  - Keys are stored securely and encrypted
+</Accordion>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="WhatsApp Automation" icon="whatsapp" href="/tutorials/whatsapp-automation">
+    Connect your agent to WhatsApp
+  </Card>
+  <Card title="AI Models Reference" icon="brain" href="/nodes/ai-models">
+    Compare AI providers
+  </Card>
+</CardGroup>

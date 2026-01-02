@@ -1,0 +1,119 @@
+---
+title: Quick Start
+description: Build your first workflow in 5 minutes
+---
+
+# Quick Start
+
+Let's create a simple workflow that responds to a webhook with an AI-generated message.
+
+## Step 1: Create a New Workflow
+
+1. Open MachinaOs at `http://localhost:3000`
+2. Click **File > New Workflow** or press `Ctrl+N`
+3. You'll see an empty canvas with a component palette on the left
+
+## Step 2: Add a Webhook Trigger
+
+1. In the component palette, expand **Utilities**
+2. Drag **Webhook Trigger** onto the canvas
+3. Click the node to select it, then click the **gear icon** to configure:
+
+```
+Path: hello
+Method: POST
+```
+
+<Tip>
+Your webhook will be available at `http://localhost:3010/webhook/hello`
+</Tip>
+
+## Step 3: Add an AI Chat Model
+
+1. Expand **AI Models** in the palette
+2. Drag **OpenAI Chat Model** onto the canvas
+3. Position it to the right of the Webhook Trigger
+4. Connect them by dragging from the Webhook's output handle to the AI model's input handle
+
+### Configure the AI Model
+
+Click the gear icon and set:
+
+```
+Model: gpt-4o-mini
+Temperature: 0.7
+```
+
+<Warning>
+You need an OpenAI API key. Click the **key icon** in the toolbar to add it.
+</Warning>
+
+## Step 4: Set the Prompt
+
+In the AI model's parameters, set the **Prompt**:
+
+```
+You are a friendly assistant. The user sent: {{webhookTrigger.body}}
+
+Respond with a helpful greeting.
+```
+
+<Info>
+The `{{webhookTrigger.body}}` syntax pulls data from the webhook's output.
+</Info>
+
+## Step 5: Add a Webhook Response
+
+1. Drag **Webhook Response** from Utilities
+2. Connect the AI model's output to the Webhook Response input
+3. Configure it:
+
+```
+Status Code: 200
+Body: {{openaiChatModel.response}}
+Content Type: application/json
+```
+
+## Step 6: Deploy and Test
+
+1. Click the **Deploy** button (purple) in the toolbar
+2. Your workflow is now listening for webhooks
+
+### Test with curl
+
+```bash
+curl -X POST http://localhost:3010/webhook/hello \
+  -H "Content-Type: application/json" \
+  -d '{"message": "Hello from curl!"}'
+```
+
+You should receive an AI-generated response!
+
+## Your First Workflow
+
+Your completed workflow looks like this:
+
+```
+[Webhook Trigger] --> [OpenAI Chat] --> [Webhook Response]
+```
+
+<Check>
+Congratulations! You've built your first MachinaOs workflow.
+</Check>
+
+## What's Next?
+
+<CardGroup cols={2}>
+  <Card title="AI Agent Tutorial" icon="robot" href="/tutorials/ai-agent-workflow">
+    Build an AI agent with memory and tools
+  </Card>
+  <Card title="WhatsApp Automation" icon="whatsapp" href="/tutorials/whatsapp-automation">
+    Automate WhatsApp messages
+  </Card>
+  <Card title="Node Catalog" icon="grid" href="/nodes/overview">
+    Explore all 35+ nodes
+  </Card>
+  <Card title="Deployment" icon="server" href="/deployment/docker">
+    Deploy to production
+  </Card>
+</CardGroup>

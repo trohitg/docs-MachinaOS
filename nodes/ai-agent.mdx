@@ -1,0 +1,216 @@
+---
+title: AI Agent & Memory
+description: Build intelligent agents with conversation memory
+---
+
+# AI Agent & Memory
+
+Create AI agents that remember context and can reason through complex tasks.
+
+## AI Agent Node
+
+The AI Agent is a powerful node that combines an AI model with memory and optional tools for complex reasoning tasks.
+
+### Input Handles
+
+| Handle | Position | Purpose |
+|--------|----------|---------|
+| Main Input | Left | User prompt/data |
+| Memory | Bottom-left (diamond) | Connect Simple Memory |
+| Model | Top (diamond) | Optional model override |
+
+### Parameters
+
+<ParamField path="systemPrompt" type="string">
+  Instructions that define the agent's behavior and personality
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The user message. Supports template variables.
+</ParamField>
+
+<ParamField path="maxIterations" type="number" default="5">
+  Maximum reasoning iterations for complex tasks
+</ParamField>
+
+### Output
+
+```json
+{
+  "response": "The agent's final response",
+  "iterations": 2,
+  "reasoning": ["Step 1 thought", "Step 2 thought"]
+}
+```
+
+### Example Configuration
+
+```
+System Prompt: You are a helpful customer service agent for TechCorp.
+              Answer questions about our products and services.
+              Be professional and concise.
+
+Prompt: {{webhookTrigger.body.question}}
+Max Iterations: 3
+```
+
+## Simple Memory Node
+
+Stores conversation history for AI agents, enabling context-aware responses.
+
+### Parameters
+
+<ParamField path="sessionId" type="string" default="default">
+  Unique identifier for the conversation session
+</ParamField>
+
+<ParamField path="memoryType" type="select" default="buffer">
+  Memory storage mode
+</ParamField>
+
+<ParamField path="windowSize" type="number" default="10">
+  Number of messages to keep (Window mode only)
+</ParamField>
+
+### Memory Types
+
+| Type | Description | Use Case |
+|------|-------------|----------|
+| Buffer | Keeps all messages | Short conversations |
+| Window | Keeps last N messages | Long conversations |
+
+### Connection
+
+Simple Memory connects to the AI Agent's **memory handle** (diamond shape on bottom-left):
+
+```
+[Simple Memory] ---(diamond)---> [AI Agent]
+```
+
+<Warning>
+Connect to the diamond handle, not the main input. The main input is for data flow.
+</Warning>
+
+### Session Management
+
+Use dynamic session IDs for multi-user scenarios:
+
+```
+Session ID: {{webhookTrigger.body.user_id}}
+```
+
+This creates separate memory for each user.
+
+### Output
+
+Simple Memory is a **config node** - it doesn't produce output. The AI Agent reads its configuration directly.
+
+## Building an Agent Workflow
+
+### Basic Setup
+
+```
+[Webhook Trigger] --> [AI Agent] --> [Webhook Response]
+                          ^
+                          |
+                   [Simple Memory]
+                          ^
+                          |
+                   [OpenAI Chat]
+```
+
+### Step-by-Step
+
+1. **Add AI Agent** from AI Agents category
+2. **Add Simple Memory** and connect to memory handle
+3. **Add AI Model** and connect to model handle (optional)
+4. **Add Trigger** (Webhook, WhatsApp, etc.) connected to main input
+5. **Add Response** node connected to agent output
+
+## Multi-Turn Conversation Example
+
+### First Request
+```bash
+curl -X POST http://localhost:3010/webhook/chat \
+  -d '{"user_id": "user123", "message": "My name is Alex"}'
+```
+
+Response: "Nice to meet you, Alex! How can I help you today?"
+
+### Second Request
+```bash
+curl -X POST http://localhost:3010/webhook/chat \
+  -d '{"user_id": "user123", "message": "What is my name?"}'
+```
+
+Response: "Your name is Alex, as you told me earlier."
+
+## Memory Persistence
+
+- Memory is stored in **SQLite** database
+- Survives server restarts
+- Managed automatically by the AI Agent
+
+### Clearing Memory
+
+To clear a session's memory, delete the session from the database or create a new session ID.
+
+## Advanced: Window Mode
+
+For long-running conversations, use Window mode to limit memory:
+
+```
+Memory Type: Window
+Window Size: 10
+```
+
+This keeps only the last 10 message pairs, preventing context overflow.
+
+## Tips
+
+<Tip>
+Use descriptive **system prompts** to define agent behavior clearly.
+</Tip>
+
+<Tip>
+Set **Max Iterations** based on task complexity. Simple Q&A: 1-2, Complex reasoning: 3-5.
+</Tip>
+
+<Tip>
+Use unique **Session IDs** per user/conversation for proper isolation.
+</Tip>
+
+<Warning>
+Long conversations with Buffer mode can exceed model context limits. Use Window mode for production.
+</Warning>
+
+## Troubleshooting
+
+<Accordion title="Agent doesn't remember previous messages">
+  - Verify Simple Memory is connected to diamond handle (not main input)
+  - Check Session ID is consistent across requests
+  - Ensure workflow is deployed (not just saved)
+</Accordion>
+
+<Accordion title="Agent gives inconsistent responses">
+  - Check if Session ID changes between requests
+  - Verify memory type and window size settings
+  - Review system prompt for clarity
+</Accordion>
+
+<Accordion title="Memory grows too large">
+  - Switch to Window mode
+  - Set appropriate window size (10-20 messages)
+  - Consider clearing sessions periodically
+</Accordion>
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="AI Models" icon="brain" href="/nodes/ai-models">
+    Available chat models
+  </Card>
+  <Card title="AI Tutorial" icon="graduation-cap" href="/tutorials/ai-agent-workflow">
+    Step-by-step agent tutorial
+  </Card>
+</CardGroup>

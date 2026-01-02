@@ -1,0 +1,330 @@
+---
+title: Webhooks & HTTP
+description: HTTP requests and webhook handling nodes
+---
+
+# Webhooks & HTTP
+
+Make HTTP requests to external APIs and receive incoming webhooks.
+
+## Available Nodes
+
+| Node | Type | Purpose |
+|------|------|---------|
+| HTTP Request | Action | Make outgoing HTTP calls |
+| Webhook Trigger | Trigger | Receive incoming HTTP requests |
+| Webhook Response | Action | Send custom response to webhook caller |
+
+---
+
+## HTTP Request
+
+Make HTTP requests to external APIs and services.
+
+### Parameters
+
+<ParamField path="url" type="string" required>
+  The URL to request. Supports template variables.
+</ParamField>
+
+<ParamField path="method" type="select" default="GET">
+  HTTP method: GET, POST, PUT, DELETE, PATCH
+</ParamField>
+
+<ParamField path="headers" type="json">
+  Request headers as JSON object
+</ParamField>
+
+<ParamField path="body" type="string">
+  Request body (for POST, PUT, PATCH)
+</ParamField>
+
+<ParamField path="timeout" type="number" default="30">
+  Request timeout in seconds
+</ParamField>
+
+### Output
+
+```json
+{
+  "status": 200,
+  "statusText": "OK",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "data": {
+    "result": "response data"
+  }
+}
+```
+
+### Examples
+
+**GET Request:**
+```
+URL: https://api.example.com/users/{{input.user_id}}
+Method: GET
+Headers: {"Authorization": "Bearer {{input.token}}"}
+```
+
+**POST Request:**
+```
+URL: https://api.example.com/orders
+Method: POST
+Headers: {"Content-Type": "application/json"}
+Body: {"product": "{{input.product}}", "quantity": {{input.qty}}}
+```
+
+**External API Integration:**
+```
+URL: https://api.openweathermap.org/data/2.5/weather?q={{input.city}}&appid=YOUR_KEY
+Method: GET
+```
+
+---
+
+## Webhook Trigger
+
+Receive incoming HTTP requests at a dynamic endpoint.
+
+### Parameters
+
+<ParamField path="path" type="string" required>
+  The webhook path (e.g., "orders" creates /webhook/orders)
+</ParamField>
+
+<ParamField path="method" type="select" default="POST">
+  HTTP method filter: GET, POST, PUT, DELETE, PATCH, or ANY
+</ParamField>
+
+<ParamField path="authentication" type="select" default="none">
+  Auth method: none, basic, bearer, api_key
+</ParamField>
+
+### Webhook URL
+
+Your webhook will be available at:
+```
+http://localhost:3010/webhook/{path}
+```
+
+For production:
+```
+https://your-domain.com/webhook/{path}
+```
+
+### Output
+
+```json
+{
+  "method": "POST",
+  "path": "/webhook/orders",
+  "headers": {
+    "content-type": "application/json",
+    "user-agent": "curl/7.68.0"
+  },
+  "query": {
+    "source": "website"
+  },
+  "body": {
+    "order_id": "12345",
+    "items": ["item1", "item2"]
+  },
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### Authentication Options
+
+| Type | Description | Header |
+|------|-------------|--------|
+| None | No authentication | - |
+| Basic | Username:password base64 | `Authorization: Basic ...` |
+| Bearer | Token authentication | `Authorization: Bearer ...` |
+| API Key | Custom API key | `X-API-Key: ...` |
+
+---
+
+## Webhook Response
+
+Send a custom response back to the webhook caller.
+
+### Parameters
+
+<ParamField path="statusCode" type="number" default="200">
+  HTTP status code to return
+</ParamField>
+
+<ParamField path="body" type="string">
+  Response body. Supports template variables.
+</ParamField>
+
+<ParamField path="contentType" type="select" default="application/json">
+  Content-Type header: application/json, text/plain, text/html
+</ParamField>
+
+### Example Responses
+
+**Success Response:**
+```
+Status Code: 200
+Body: {"success": true, "message": "Order received", "id": "{{generated.id}}"}
+Content Type: application/json
+```
+
+**Error Response:**
+```
+Status Code: 400
+Body: {"error": "Invalid request", "details": "{{validation.error}}"}
+Content Type: application/json
+```
+
+**HTML Response:**
+```
+Status Code: 200
+Body: <html><body><h1>Thank you!</h1></body></html>
+Content Type: text/html
+```
+
+---
+
+## Common Workflows
+
+### API Endpoint
+
+Create a simple API endpoint:
+
+```
+[Webhook Trigger] --> [Python Executor] --> [Webhook Response]
+     (path: api)        (process data)       (return result)
+```
+
+**Test:**
+```bash
+curl -X POST http://localhost:3010/webhook/api \
+  -H "Content-Type: application/json" \
+  -d '{"action": "calculate", "value": 100}'
+```
+
+### Third-Party Integration
+
+Receive events from external services:
+
+```
+[Webhook Trigger] --> [HTTP Request] --> [WhatsApp Send]
+   (stripe/github)     (fetch details)     (notify admin)
+```
+
+### Data Pipeline
+
+Forward data to multiple destinations:
+
+```
+[Webhook Trigger] --> [HTTP Request #1] (Database API)
+                  |
+                  --> [HTTP Request #2] (Analytics)
+                  |
+                  --> [WhatsApp Send] (Notification)
+```
+
+### AI-Powered API
+
+Create an AI endpoint:
+
+```
+[Webhook Trigger] --> [OpenAI Chat] --> [Webhook Response]
+```
+
+**Prompt:** `{{webhookTrigger.body.prompt}}`
+
+**Response:** `{{openaiChatModel.response}}`
+
+---
+
+## Testing Webhooks
+
+### Using curl
+
+```bash
+# GET request
+curl http://localhost:3010/webhook/test
+
+# POST with JSON
+curl -X POST http://localhost:3010/webhook/orders \
+  -H "Content-Type: application/json" \
+  -d '{"item": "Widget", "quantity": 5}'
+
+# With authentication
+curl -X POST http://localhost:3010/webhook/secure \
+  -H "Authorization: Bearer your-token" \
+  -d '{"data": "value"}'
+```
+
+### Using HTTPie
+
+```bash
+http POST localhost:3010/webhook/test item=Widget quantity:=5
+```
+
+### External Testing
+
+Use services like:
+- [webhook.site](https://webhook.site) - Test outgoing webhooks
+- [ngrok](https://ngrok.com) - Expose local webhooks publicly
+
+---
+
+## Tips
+
+<Tip>
+Use **meaningful paths** that describe the purpose: `/webhook/orders`, `/webhook/stripe-events`
+</Tip>
+
+<Tip>
+Always **validate incoming data** before processing with Python Executor or similar.
+</Tip>
+
+<Tip>
+Return **appropriate status codes**: 200 (success), 400 (bad request), 500 (server error)
+</Tip>
+
+<Warning>
+In production, always enable authentication on webhooks that modify data.
+</Warning>
+
+---
+
+## Troubleshooting
+
+<Accordion title="Webhook not receiving requests">
+  - Verify workflow is **deployed** (not just saved)
+  - Check the path is correct (no leading slash)
+  - Ensure backend is running on correct port
+  - Check firewall/network settings
+</Accordion>
+
+<Accordion title="HTTP Request fails">
+  - Verify URL is correct and accessible
+  - Check headers (especially Content-Type)
+  - Look for CORS issues if calling from browser
+  - Check timeout setting for slow APIs
+</Accordion>
+
+<Accordion title="Response not sent">
+  - Ensure Webhook Response is connected to workflow
+  - Verify template variables resolve correctly
+  - Check status code is valid (100-599)
+</Accordion>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Build a webhook workflow
+  </Card>
+  <Card title="Python Executor" icon="code" href="/nodes/schedulers">
+    Process webhook data
+  </Card>
+</CardGroup>

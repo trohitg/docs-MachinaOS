@@ -1,0 +1,305 @@
+---
+title: WhatsApp Nodes
+description: Send, receive, and manage WhatsApp messages
+---
+
+# WhatsApp Nodes
+
+Automate WhatsApp messaging with three specialized nodes.
+
+## Available Nodes
+
+| Node | Type | Purpose |
+|------|------|---------|
+| WhatsApp Connect | Action | Check connection status |
+| WhatsApp Receive | Trigger | Wait for incoming messages |
+| WhatsApp Send | Action | Send messages |
+
+## Setup Requirements
+
+1. WhatsApp service running (included in Docker setup)
+2. WhatsApp account for pairing
+3. Scan QR code to link device
+
+### Connecting
+
+1. Click **Android/WhatsApp icon** in toolbar
+2. Scan displayed QR code with WhatsApp mobile app
+3. Go to WhatsApp > Settings > Linked Devices > Link a Device
+
+---
+
+## WhatsApp Receive
+
+Trigger node that fires when messages arrive.
+
+### Parameters
+
+<ParamField path="messageTypeFilter" type="select" default="all">
+  Filter by message type: all, text, image, video, audio, document, location, contact
+</ParamField>
+
+<ParamField path="filter" type="select" default="all">
+  Sender filter mode
+</ParamField>
+
+<ParamField path="phone_number" type="string">
+  Specific phone number (when filter = contact)
+</ParamField>
+
+<ParamField path="group_id" type="select">
+  Specific group (when filter = group)
+</ParamField>
+
+<ParamField path="keywords" type="string">
+  Comma-separated keywords (when filter = keywords)
+</ParamField>
+
+<ParamField path="forwardedFilter" type="select" default="all">
+  Forwarded message handling: all, only_forwarded, ignore_forwarded
+</ParamField>
+
+<ParamField path="ignoreOwnMessages" type="boolean" default="true">
+  Skip messages sent by yourself
+</ParamField>
+
+### Filter Options
+
+| Filter | Description |
+|--------|-------------|
+| All Messages | Receive everything |
+| From Any Contact | Non-group messages only |
+| From Specific Contact | Match phone number |
+| From Specific Group | Match group |
+| Contains Keywords | Match keywords in message |
+
+### Output
+
+```json
+{
+  "message_id": "ABC123",
+  "sender": "1234567890@s.whatsapp.net",
+  "sender_phone": "+1234567890",
+  "chat_id": "1234567890@s.whatsapp.net",
+  "message_type": "text",
+  "text": "Hello!",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "is_group": false,
+  "is_from_me": false,
+  "push_name": "John Doe",
+  "is_forwarded": false,
+  "forwarding_score": 0,
+  "group_info": null
+}
+```
+
+### Group Message Output
+
+When `is_group` is true:
+
+```json
+{
+  "group_info": {
+    "group_jid": "123456789@g.us",
+    "sender_jid": "1234567890@s.whatsapp.net",
+    "sender_phone": "+1234567890",
+    "sender_name": "John Doe"
+  }
+}
+```
+
+### Example: Reply to Specific Keywords
+
+```
+Filter: Contains Keywords
+Keywords: help, support, question
+```
+
+---
+
+## WhatsApp Send
+
+Send messages to contacts or groups.
+
+### Parameters
+
+<ParamField path="phone_number" type="string" required>
+  Recipient phone number with country code (e.g., +1234567890)
+</ParamField>
+
+<ParamField path="message" type="string" required>
+  Message content. Supports template variables.
+</ParamField>
+
+### Output
+
+```json
+{
+  "success": true,
+  "message_id": "XYZ789",
+  "timestamp": "2024-01-15T10:35:00Z"
+}
+```
+
+### Example: Auto-Reply
+
+```
+Phone Number: {{whatsappReceive.sender_phone}}
+Message: Thanks for your message! I'll get back to you soon.
+```
+
+### Example: Forward to Admin
+
+```
+Phone Number: +1987654321
+Message: New message from {{whatsappReceive.push_name}}: {{whatsappReceive.text}}
+```
+
+---
+
+## WhatsApp Connect
+
+Check WhatsApp connection status and device info.
+
+### Output
+
+```json
+{
+  "connected": true,
+  "device_id": "abc123",
+  "phone_number": "+1234567890",
+  "platform": "android",
+  "push_name": "My Business"
+}
+```
+
+### Use Case
+
+Check connection before sending:
+
+```
+[WhatsApp Connect] --> [Python Executor] --> [WhatsApp Send]
+                           (check status)
+```
+
+---
+
+## Common Workflows
+
+### Auto-Responder
+
+```
+[WhatsApp Receive] --> [OpenAI Chat] --> [WhatsApp Send]
+```
+
+**AI Prompt:**
+```
+Respond to this customer message: {{whatsappReceive.text}}
+Be helpful and professional.
+```
+
+**Send Config:**
+```
+Phone: {{whatsappReceive.sender_phone}}
+Message: {{openaiChatModel.response}}
+```
+
+### Group Monitor
+
+```
+[WhatsApp Receive] --> [Python Executor] --> [Webhook/Database]
+     (group filter)        (log message)
+```
+
+**Filter Config:**
+```
+Filter: From Specific Group
+Group: [Select your group]
+```
+
+### Keyword Bot
+
+```
+[WhatsApp Receive] --> [Python Executor] --> [WhatsApp Send]
+   (keywords: help)      (select response)
+```
+
+**Python Code:**
+```python
+text = input_data.get("text", "").lower()
+
+if "hours" in text:
+    response = "We're open 9am-5pm, Mon-Fri"
+elif "price" in text:
+    response = "Please visit our website for pricing"
+else:
+    response = "How can I help you?"
+
+output = {"response": response}
+```
+
+---
+
+## Tips
+
+<Tip>
+Use `{{whatsappReceive.sender_phone}}` to reply to the sender automatically.
+</Tip>
+
+<Tip>
+Combine with **Simple Memory** for context-aware conversations per contact.
+</Tip>
+
+<Tip>
+Set `Session ID: {{whatsappReceive.sender_phone}}` in Simple Memory for per-user history.
+</Tip>
+
+<Warning>
+Respect WhatsApp's terms of service. Don't send spam or bulk unsolicited messages.
+</Warning>
+
+---
+
+## Troubleshooting
+
+<Accordion title="QR code not appearing">
+  Check WhatsApp service status:
+  ```bash
+  docker-compose logs whatsapp
+  ```
+  Restart if needed:
+  ```bash
+  docker-compose restart whatsapp
+  ```
+</Accordion>
+
+<Accordion title="Messages not received">
+  - Verify workflow is **deployed** (not just saved)
+  - Check filter settings aren't too restrictive
+  - Confirm `ignoreOwnMessages` setting
+</Accordion>
+
+<Accordion title="Send fails">
+  - Include country code in phone number
+  - Check WhatsApp connection status
+  - Verify recipient hasn't blocked you
+</Accordion>
+
+<Accordion title="Connection drops frequently">
+  - Check internet connectivity
+  - Ensure phone stays online
+  - Don't use WhatsApp Web simultaneously
+</Accordion>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="WhatsApp Tutorial" icon="whatsapp" href="/tutorials/whatsapp-automation">
+    Step-by-step guide
+  </Card>
+  <Card title="AI Agent" icon="robot" href="/nodes/ai-agent">
+    Add AI-powered responses
+  </Card>
+</CardGroup>

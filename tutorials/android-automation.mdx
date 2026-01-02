@@ -1,0 +1,242 @@
+---
+title: Android Automation
+description: Control Android devices via ADB or remote relay
+---
+
+# Android Automation
+
+MachinaOs can control Android devices for automation tasks like launching apps, monitoring battery, controlling WiFi, and more.
+
+## Connection Methods
+
+| Method | Use Case |
+|--------|----------|
+| **Local ADB** | Device connected via USB to your machine |
+| **Remote Relay** | Device connected via WebSocket relay server |
+
+## Step 1: Set Up Connection
+
+### Option A: Local ADB
+
+1. Enable **Developer Options** on your Android device
+2. Enable **USB Debugging**
+3. Connect device via USB
+4. Run `adb devices` to verify connection
+
+### Option B: Remote Relay
+
+1. Click the **Android icon** in the toolbar
+2. Enter your relay URL and API key in Credentials
+3. Click **Connect**
+4. Scan the QR code with the companion Android app
+
+<Info>
+Remote relay allows controlling devices anywhere with internet access.
+</Info>
+
+## Step 2: Add Android Device Setup
+
+1. Drag **Android Device Setup** from Android category
+2. Configure connection type:
+
+**Local ADB:**
+```
+Connection Type: Local ADB Device
+Device ID: [Select from dropdown]
+Auto Forward: true
+Port: 8888
+```
+
+**Remote:**
+```
+Connection Type: Remote WebSocket
+```
+
+## Available Android Nodes
+
+### System Monitoring
+| Node | Description |
+|------|-------------|
+| Battery Monitor | Battery level, charging status, temperature |
+| Network Monitor | WiFi/cellular status, internet connectivity |
+| System Info | Device model, Android version, memory |
+| Location | GPS coordinates, accuracy, provider |
+
+### App Management
+| Node | Description |
+|------|-------------|
+| App Launcher | Launch apps by package name |
+| App List | Get installed applications |
+
+### Automation
+| Node | Description |
+|------|-------------|
+| WiFi Automation | Enable/disable WiFi, scan networks |
+| Bluetooth Automation | Toggle Bluetooth, list paired devices |
+| Audio Automation | Volume control, mute/unmute |
+| Device State | Airplane mode, brightness, screen |
+| Screen Control | Wake screen, timeout settings |
+
+### Sensors
+| Node | Description |
+|------|-------------|
+| Motion Detection | Accelerometer, gyroscope, shake detection |
+| Environmental Sensors | Temperature, humidity, pressure, light |
+
+### Media
+| Node | Description |
+|------|-------------|
+| Camera Control | Take photos, get camera info |
+| Media Control | Playback control, volume |
+
+## Example: Battery Alert Workflow
+
+Create a workflow that sends an alert when battery is low.
+
+### Workflow Design
+
+```
+[Cron Scheduler] --> [Battery Monitor] --> [Python Executor] --> [WhatsApp Send]
+                                               (check level)
+```
+
+### Step 1: Add Cron Trigger
+```
+Cron Expression: */10 * * * *  (every 10 minutes)
+```
+
+### Step 2: Add Battery Monitor
+```
+Action: Get Status
+```
+
+### Step 3: Add Python Executor
+```python
+battery_level = input_data.get("level", 100)
+is_charging = input_data.get("is_charging", False)
+
+if battery_level < 20 and not is_charging:
+    output = {
+        "alert": True,
+        "message": f"Battery low: {battery_level}%"
+    }
+else:
+    output = {"alert": False}
+```
+
+### Step 4: Add WhatsApp Send (conditional)
+```
+Phone Number: +1234567890
+Message: {{pythonExecutor.message}}
+```
+
+## Example: App Launcher Workflow
+
+Launch an app when receiving a webhook.
+
+```
+[Webhook Trigger] --> [App Launcher]
+```
+
+**App Launcher Config:**
+```
+Package Name: {{webhookTrigger.body.app}}
+```
+
+**Test:**
+```bash
+curl -X POST http://localhost:3010/webhook/launch \
+  -H "Content-Type: application/json" \
+  -d '{"app": "com.spotify.music"}'
+```
+
+## Example: WiFi Toggle
+
+```
+[Webhook Trigger] --> [WiFi Automation]
+```
+
+**WiFi Automation Config:**
+```
+Action: {{webhookTrigger.body.action}}
+```
+
+**Test:**
+```bash
+# Enable WiFi
+curl -X POST http://localhost:3010/webhook/wifi \
+  -d '{"action": "enable"}'
+
+# Disable WiFi
+curl -X POST http://localhost:3010/webhook/wifi \
+  -d '{"action": "disable"}'
+```
+
+## Battery Monitor Output
+
+```json
+{
+  "level": 85,
+  "is_charging": true,
+  "status": "charging",
+  "plugged": "ac",
+  "temperature": 28.5,
+  "health": "good",
+  "technology": "Li-ion"
+}
+```
+
+## Network Monitor Output
+
+```json
+{
+  "is_connected": true,
+  "type": "wifi",
+  "wifi_ssid": "MyNetwork",
+  "is_internet_available": true,
+  "ip_address": "192.168.1.100"
+}
+```
+
+## Troubleshooting
+
+<Accordion title="Device not showing in dropdown">
+  - Run `adb devices` to check connection
+  - Ensure USB debugging is enabled
+  - Try different USB cable/port
+  - Restart ADB: `adb kill-server && adb start-server`
+</Accordion>
+
+<Accordion title="Remote relay won't connect">
+  - Verify relay URL is correct
+  - Check API key is valid
+  - Ensure companion app is installed on device
+  - Check firewall settings
+</Accordion>
+
+<Accordion title="Commands fail with permission error">
+  - Some actions require root access
+  - Use device automation apps for restricted features
+  - Check Android version compatibility
+</Accordion>
+
+## Tips
+
+<Tip>
+Start with Battery Monitor and System Info to verify your connection works before building complex workflows.
+</Tip>
+
+<Tip>
+Use meaningful node names (F2 to rename) when building workflows with multiple Android nodes.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Android Node Reference" icon="mobile" href="/nodes/android">
+    Full documentation for all 17 nodes
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
+    Trigger Android actions via HTTP
+  </Card>
+</CardGroup>

@@ -1,0 +1,411 @@
+---
+title: Android Nodes
+description: 17 nodes for Android device automation
+---
+
+# Android Nodes
+
+Control and monitor Android devices with 17 specialized nodes.
+
+## Connection Setup
+
+### Android Device Setup
+
+Configure how MachinaOs connects to your device.
+
+<ParamField path="connection_type" type="select" required>
+  Connection method: Local ADB Device or Remote WebSocket
+</ParamField>
+
+**Local ADB:**
+<ParamField path="device_id" type="select">
+  Select from connected devices
+</ParamField>
+
+<ParamField path="auto_forward" type="boolean" default="true">
+  Automatically setup port forwarding
+</ParamField>
+
+<ParamField path="port" type="number" default="8888">
+  Port for ADB forwarding
+</ParamField>
+
+**Remote WebSocket:**
+<ParamField path="websocket_url" type="string">
+  Relay server URL (configured in .env)
+</ParamField>
+
+---
+
+## System Monitoring (4 nodes)
+
+### Battery Monitor
+
+Monitor battery status and health.
+
+**Actions:** get_status
+
+**Output:**
+```json
+{
+  "level": 85,
+  "is_charging": true,
+  "status": "charging",
+  "plugged": "ac",
+  "temperature": 28.5,
+  "health": "good",
+  "technology": "Li-ion"
+}
+```
+
+### Network Monitor
+
+Check network connectivity.
+
+**Actions:** get_status
+
+**Output:**
+```json
+{
+  "is_connected": true,
+  "type": "wifi",
+  "wifi_ssid": "MyNetwork",
+  "is_internet_available": true,
+  "ip_address": "192.168.1.100",
+  "signal_strength": -45
+}
+```
+
+### System Info
+
+Get device information.
+
+**Actions:** get_info
+
+**Output:**
+```json
+{
+  "device_model": "Pixel 7",
+  "manufacturer": "Google",
+  "android_version": "14",
+  "api_level": 34,
+  "total_memory": 8192,
+  "available_memory": 4096,
+  "total_storage": 128000,
+  "available_storage": 64000
+}
+```
+
+### Location
+
+Get GPS location.
+
+**Actions:** get_location
+
+**Output:**
+```json
+{
+  "latitude": 37.7749,
+  "longitude": -122.4194,
+  "accuracy": 10.5,
+  "altitude": 15.2,
+  "provider": "gps",
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+---
+
+## App Management (2 nodes)
+
+### App Launcher
+
+Launch applications by package name.
+
+<ParamField path="package_name" type="string" required>
+  App package name (e.g., com.spotify.music)
+</ParamField>
+
+**Output:**
+```json
+{
+  "success": true,
+  "package": "com.spotify.music",
+  "message": "App launched"
+}
+```
+
+**Common Package Names:**
+| App | Package |
+|-----|---------|
+| Chrome | com.android.chrome |
+| YouTube | com.google.android.youtube |
+| Spotify | com.spotify.music |
+| WhatsApp | com.whatsapp |
+| Gmail | com.google.android.gm |
+
+### App List
+
+Get installed applications.
+
+**Output:**
+```json
+{
+  "apps": [
+    {
+      "name": "Chrome",
+      "package": "com.android.chrome",
+      "version": "120.0.6099.230"
+    }
+  ],
+  "count": 150
+}
+```
+
+---
+
+## Automation (6 nodes)
+
+### WiFi Automation
+
+Control WiFi settings.
+
+**Actions:** enable, disable, get_status, scan
+
+**Output (scan):**
+```json
+{
+  "networks": [
+    {
+      "ssid": "MyNetwork",
+      "bssid": "00:11:22:33:44:55",
+      "signal": -45,
+      "security": "WPA2"
+    }
+  ]
+}
+```
+
+### Bluetooth Automation
+
+Control Bluetooth settings.
+
+**Actions:** enable, disable, get_status, get_paired_devices
+
+**Output (paired devices):**
+```json
+{
+  "devices": [
+    {
+      "name": "AirPods Pro",
+      "address": "AA:BB:CC:DD:EE:FF",
+      "type": "audio"
+    }
+  ]
+}
+```
+
+### Audio Automation
+
+Control volume and audio.
+
+**Actions:** get_volume, set_volume, mute, unmute
+
+<ParamField path="volume_level" type="slider">
+  Volume level 0-100 (for set_volume)
+</ParamField>
+
+<ParamField path="stream_type" type="select" default="media">
+  Stream: media, ringtone, notification, alarm
+</ParamField>
+
+### Device State Automation
+
+Control device states.
+
+**Actions:** get_state, set_airplane_mode, set_power_save
+
+<ParamField path="enabled" type="boolean">
+  Enable or disable the feature
+</ParamField>
+
+### Screen Control Automation
+
+Control display settings.
+
+**Actions:** get_brightness, set_brightness, wake_screen, set_timeout
+
+<ParamField path="brightness" type="slider">
+  Brightness level 0-255
+</ParamField>
+
+<ParamField path="auto_brightness" type="boolean">
+  Enable automatic brightness
+</ParamField>
+
+### Airplane Mode Control
+
+Toggle airplane mode.
+
+**Actions:** get_status, enable, disable
+
+---
+
+## Sensors (2 nodes)
+
+### Motion Detection
+
+Access motion sensors.
+
+**Actions:** get_accelerometer, get_gyroscope, detect_shake
+
+**Output (accelerometer):**
+```json
+{
+  "x": 0.15,
+  "y": 9.78,
+  "z": 0.23,
+  "timestamp": "2024-01-15T10:30:00Z"
+}
+```
+
+### Environmental Sensors
+
+Access environmental sensors.
+
+**Actions:** get_light, get_pressure, get_temperature, get_humidity
+
+**Output:**
+```json
+{
+  "light": 350,
+  "pressure": 1013.25,
+  "temperature": 22.5,
+  "humidity": 45
+}
+```
+
+<Info>
+Not all devices have all sensors. Output will indicate unavailable sensors.
+</Info>
+
+---
+
+## Media (2 nodes)
+
+### Camera Control
+
+Control camera functions.
+
+**Actions:** get_info, take_photo
+
+<ParamField path="camera_id" type="select" default="back">
+  Camera to use: back, front
+</ParamField>
+
+**Output (get_info):**
+```json
+{
+  "cameras": [
+    {
+      "id": "0",
+      "facing": "back",
+      "megapixels": 50
+    },
+    {
+      "id": "1",
+      "facing": "front",
+      "megapixels": 12
+    }
+  ]
+}
+```
+
+### Media Control
+
+Control media playback.
+
+**Actions:** play, pause, next, previous, get_volume, set_volume
+
+---
+
+## Example Workflows
+
+### Battery Alert
+
+```
+[Cron (hourly)] --> [Battery Monitor] --> [Python] --> [WhatsApp Send]
+```
+
+**Python:**
+```python
+level = input_data.get("level", 100)
+if level < 20:
+    output = {"alert": True, "msg": f"Battery: {level}%"}
+else:
+    output = {"alert": False}
+```
+
+### WiFi Toggle via Webhook
+
+```
+[Webhook Trigger] --> [WiFi Automation]
+```
+
+**Webhook path:** `/wifi`
+**WiFi Action:** `{{webhookTrigger.body.action}}`
+
+```bash
+curl -X POST http://localhost:3010/webhook/wifi \
+  -d '{"action": "enable"}'
+```
+
+### Morning Routine
+
+```
+[Cron (7:00 AM)] --> [WiFi Enable] --> [App Launcher (News)]
+                          |
+                          v
+                    [Audio: Vol 50%]
+```
+
+---
+
+## Troubleshooting
+
+<Accordion title="Device not detected">
+  ```bash
+  # Check ADB connection
+  adb devices
+
+  # Restart ADB
+  adb kill-server
+  adb start-server
+  ```
+</Accordion>
+
+<Accordion title="Permission denied">
+  Some features require:
+  - USB debugging enabled
+  - Developer options enabled
+  - Specific app permissions
+</Accordion>
+
+<Accordion title="Remote relay issues">
+  - Verify relay URL in .env
+  - Check API key is valid
+  - Ensure companion app is running
+</Accordion>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="Android Tutorial" icon="mobile" href="/tutorials/android-automation">
+    Step-by-step guide
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
+    Trigger Android actions via HTTP
+  </Card>
+</CardGroup>

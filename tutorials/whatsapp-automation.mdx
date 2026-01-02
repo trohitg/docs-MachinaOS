@@ -1,0 +1,185 @@
+---
+title: WhatsApp Automation
+description: Send and receive WhatsApp messages automatically
+---
+
+# WhatsApp Automation
+
+Automate WhatsApp messaging with MachinaOs. Receive messages, process them, and send responses.
+
+## Prerequisites
+
+- MachinaOs running with the WhatsApp service
+- A WhatsApp account for pairing
+
+## Understanding WhatsApp Nodes
+
+| Node | Purpose |
+|------|---------|
+| **WhatsApp Connect** | Check connection status |
+| **WhatsApp Receive** | Trigger on incoming messages |
+| **WhatsApp Send** | Send messages to contacts/groups |
+
+## Step 1: Connect WhatsApp
+
+1. Click the **WhatsApp icon** in the toolbar (or add WhatsApp Connect node)
+2. A modal appears with a QR code
+3. Open WhatsApp on your phone > Settings > Linked Devices > Link a Device
+4. Scan the QR code
+5. Wait for "Connected" status
+
+<Warning>
+Keep the WhatsApp service running. If it stops, you'll need to re-scan the QR code.
+</Warning>
+
+## Step 2: Create a Message Responder
+
+Let's build a workflow that auto-replies to incoming messages.
+
+### Add WhatsApp Receive Trigger
+
+1. Drag **WhatsApp Receive** from the WhatsApp category
+2. Configure the trigger:
+
+```
+Message Type Filter: All Messages
+Sender Filter: All Messages
+Ignore Own Messages: true
+```
+
+### Filter Options
+
+| Filter | Description |
+|--------|-------------|
+| All Messages | Receive everything |
+| From Any Contact | Non-group messages only |
+| From Specific Contact | Filter by phone number |
+| From Specific Group | Filter by group |
+| Contains Keywords | Match specific words |
+
+## Step 3: Add an AI Response
+
+1. Drag **OpenAI Chat Model** onto the canvas
+2. Connect WhatsApp Receive output to AI input
+3. Configure:
+
+```
+Model: gpt-4o-mini
+Prompt: "Reply to this WhatsApp message: {{whatsappReceive.text}}"
+```
+
+## Step 4: Send the Response
+
+1. Drag **WhatsApp Send** onto the canvas
+2. Connect AI output to WhatsApp Send input
+3. Configure:
+
+```
+Phone Number: {{whatsappReceive.sender_phone}}
+Message: {{openaiChatModel.response}}
+```
+
+## Complete Workflow
+
+```
+[WhatsApp Receive] --> [OpenAI Chat] --> [WhatsApp Send]
+```
+
+## Step 5: Deploy
+
+1. Click **Deploy**
+2. Send a message to your linked WhatsApp number
+3. The workflow triggers and sends an AI response
+
+## Available Data from WhatsApp Receive
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `message_id` | string | Unique message ID |
+| `sender` | string | Sender JID |
+| `sender_phone` | string | Phone number |
+| `chat_id` | string | Chat/group ID |
+| `message_type` | string | text, image, video, etc. |
+| `text` | string | Message content |
+| `timestamp` | string | When message was sent |
+| `is_group` | boolean | True if from a group |
+| `is_from_me` | boolean | True if sent by you |
+| `push_name` | string | Sender's display name |
+| `is_forwarded` | boolean | True if forwarded |
+| `group_info` | object | Group details (if group message) |
+
+## Group Message Handling
+
+For group messages, use:
+
+```
+{{whatsappReceive.group_info.group_jid}}
+{{whatsappReceive.group_info.sender_name}}
+{{whatsappReceive.group_info.sender_phone}}
+```
+
+## Example: Keyword-Based Response
+
+Set up different responses based on keywords:
+
+### Configuration
+```
+Sender Filter: Contains Keywords
+Keywords: help, support, question
+```
+
+### AI Prompt
+```
+The user needs help. Their message: {{whatsappReceive.text}}
+Provide a helpful response.
+```
+
+## Example: Group Bot
+
+Reply only in specific groups:
+
+```
+Sender Filter: From Specific Group
+Group: [Select from dropdown]
+```
+
+## Troubleshooting
+
+<Accordion title="QR code not appearing">
+  - Ensure the WhatsApp service is running on port 5000
+  - Check Docker logs: `docker-compose logs whatsapp`
+  - Restart the service: `docker-compose restart whatsapp`
+</Accordion>
+
+<Accordion title="Messages not being received">
+  - Verify the trigger is deployed (not just saved)
+  - Check "Ignore Own Messages" setting
+  - Ensure filters aren't too restrictive
+</Accordion>
+
+<Accordion title="Send fails with error">
+  - Verify phone number format (include country code)
+  - Check WhatsApp connection status
+  - Ensure recipient hasn't blocked you
+</Accordion>
+
+## Tips
+
+<Tip>
+Use **Simple Memory** with WhatsApp for context-aware conversations. Set Session ID to `{{whatsappReceive.sender_phone}}` for per-contact memory.
+</Tip>
+
+<Tip>
+Test with your own number first before deploying to production.
+</Tip>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Android Automation" icon="mobile" href="/tutorials/android-automation">
+    Control Android devices
+  </Card>
+  <Card title="WhatsApp Node Reference" icon="book" href="/nodes/whatsapp">
+    Full node documentation
+  </Card>
+</CardGroup>

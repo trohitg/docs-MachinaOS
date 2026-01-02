@@ -1,0 +1,72 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "MachinaOs",
+  "colors": {
+    "primary": "#16A34A",
+    "light": "#07C983",
+    "dark": "#15803D"
+  },
+  "logo": {
+    "dark": "/logo/dark.svg",
+    "light": "/logo/light.svg"
+  },
+  "favicon": "/favicon.svg",
+  "navigation": [
+    {
+      "tab": "Documentation",
+      "groups": [
+        {
+          "group": "Getting Started",
+          "pages": ["introduction", "installation", "quickstart"]
+        },
+        {
+          "group": "Tutorials",
+          "pages": [
+            "tutorials/first-workflow",
+            "tutorials/ai-agent-workflow",
+            "tutorials/whatsapp-automation",
+            "tutorials/android-automation"
+          ]
+        },
+        {
+          "group": "Node Catalog",
+          "pages": [
+            "nodes/overview",
+            "nodes/ai-models",
+            "nodes/ai-agent",
+            "nodes/whatsapp",
+            "nodes/android",
+            "nodes/webhooks",
+            "nodes/schedulers"
+          ]
+        },
+        {
+          "group": "Deployment",
+          "pages": ["deployment/docker", "deployment/production"]
+        },
+        {
+          "group": "FAQ",
+          "pages": ["faq"]
+        }
+      ]
+    }
+  ],
+  "navbar": {
+    "links": [
+      {
+        "label": "GitHub",
+        "url": "https://github.com/trohitg/MachinaOs"
+      }
+    ]
+  },
+  "footerSocials": {
+    "github": "https://github.com/trohitg/MachinaOs"
+  },
+  "feedback": {
+    "thumbsRating": true
+  },
+  "search": {
+    "prompt": "Search MachinaOs docs..."
+  }
+}
