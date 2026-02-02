@@ -1,17 +1,24 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
+  "theme": "quill",
   "name": "MachinaOs",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#BD93F9",
+    "light": "#FF79C6",
+    "dark": "#6272A4",
+    "background": {
+      "dark": "#282A36",
+      "light": "#F8F8F2"
+    }
   },
   "logo": {
     "dark": "/logo/dark.svg",
     "light": "/logo/light.svg"
   },
   "favicon": "/favicon.svg",
+  "modeToggle": {
+    "default": "dark"
+  },
   "navigation": {
     "dropdowns": [
       {
@@ -37,8 +44,11 @@
               "nodes/overview",
               "nodes/ai-models",
               "nodes/ai-agent",
+              "nodes/skills",
+              "nodes/tools",
               "nodes/whatsapp",
               "nodes/android",
+              "nodes/documents",
               "nodes/webhooks",
               "nodes/schedulers"
             ]
@@ -71,5 +81,13 @@
   },
   "search": {
     "prompt": "Search MachinaOs docs..."
+  },
+  "styling": {
+    "codeBlock": {
+      "theme": {
+        "dark": "dracula",
+        "light": "github-light"
+      }
+    }
   }
 }

@@ -1,32 +1,50 @@
 ---
-title: AI Agent & Memory
-description: Build intelligent agents with conversation memory
+title: AI Agents & Memory
+description: Build intelligent agents with conversation memory, skills, and tool calling
 ---
 
-# AI Agent & Memory
+# AI Agents & Memory
 
-Create AI agents that remember context and can reason through complex tasks.
+MachinaOs provides two types of AI agents for different use cases, plus a memory node for conversation context.
+
+## Agent Types
+
+| Agent | Purpose | Special Features |
+|-------|---------|-----------------|
+| AI Agent | Complex reasoning with tool calling | LangGraph execution, iterative reasoning |
+| Chat Agent | Conversational AI with skills | Skill-driven behavior, multi-turn chat |
+| Simple Memory | Conversation history storage | Markdown format, long-term vector storage |
+
+---
 
 ## AI Agent Node
 
-The AI Agent is a powerful node that combines an AI model with memory and optional tools for complex reasoning tasks.
+The AI Agent uses LangGraph for structured execution with tool calling and iterative reasoning.
 
 ### Input Handles
 
 | Handle | Position | Purpose |
 |--------|----------|---------|
-| Main Input | Left | User prompt/data |
+| Main Input | Left | User prompt/data from upstream nodes |
 | Memory | Bottom-left (diamond) | Connect Simple Memory |
-| Model | Top (diamond) | Optional model override |
+| Tools | Bottom-right (diamond) | Connect Tool nodes |
 
 ### Parameters
+
+<ParamField path="provider" type="select" required>
+  AI provider: openai, anthropic, gemini, openrouter, groq, cerebras
+</ParamField>
+
+<ParamField path="model" type="select" required>
+  Model to use (options based on provider)
+</ParamField>
 
 <ParamField path="systemPrompt" type="string">
   Instructions that define the agent's behavior and personality
 </ParamField>
 
 <ParamField path="prompt" type="string" required>
-  The user message. Supports template variables.
+  The user message. Supports template variables like `{{nodeName.field}}`
 </ParamField>
 
 <ParamField path="maxIterations" type="number" default="5">
@@ -38,62 +56,159 @@ The AI Agent is a powerful node that combines an AI model with memory and option
 ```json
 {
   "response": "The agent's final response",
+  "thinking": "Reasoning process (if thinking enabled)",
   "iterations": 2,
-  "reasoning": ["Step 1 thought", "Step 2 thought"]
+  "tool_calls": [
+    {"tool": "calculator", "input": {"operation": "add", "a": 5, "b": 3}, "output": 8}
+  ]
 }
 ```
 
-### Example Configuration
+### Tool Calling
+
+Connect Tool nodes to the **input-tools** handle (bottom-right diamond) to give the agent capabilities:
 
 ```
-System Prompt: You are a helpful customer service agent for TechCorp.
-              Answer questions about our products and services.
-              Be professional and concise.
-
-Prompt: {{webhookTrigger.body.question}}
-Max Iterations: 3
+[Calculator Tool] --+
+                    +--> [AI Agent] --> [Output]
+[Web Search Tool] --+
 ```
 
-## Simple Memory Node
+The agent will automatically use tools when needed based on the user's request.
 
-Stores conversation history for AI agents, enabling context-aware responses.
+---
+
+## Chat Agent Node
+
+The Chat Agent is designed for conversational interactions with skill-based behavior extension.
+
+### Input Handles
+
+| Handle | Position | Purpose |
+|--------|----------|---------|
+| Main Input | Left | User message (e.g., from Chat Trigger) |
+| Memory | Bottom-left (diamond) | Connect Simple Memory |
+| Skills | Bottom-right (diamond) | Connect Skill nodes |
+| Tools | Bottom (diamond) | Connect Tool nodes |
 
 ### Parameters
 
-<ParamField path="sessionId" type="string" default="default">
-  Unique identifier for the conversation session
+<ParamField path="provider" type="select" required>
+  AI provider: openai, anthropic, gemini, openrouter, groq, cerebras
 </ParamField>
 
-<ParamField path="memoryType" type="select" default="buffer">
-  Memory storage mode
+<ParamField path="model" type="select" required>
+  Model to use (options based on provider)
 </ParamField>
 
-<ParamField path="windowSize" type="number" default="10">
-  Number of messages to keep (Window mode only)
+<ParamField path="systemPrompt" type="string">
+  Base system instructions (extended by connected skills)
 </ParamField>
 
-### Memory Types
+<ParamField path="prompt" type="string">
+  User message. If empty, reads from connected input node's `message`, `text`, or `content` field.
+</ParamField>
 
-| Type | Description | Use Case |
-|------|-------------|----------|
-| Buffer | Keeps all messages | Short conversations |
-| Window | Keeps last N messages | Long conversations |
+### Skill Support
+
+Connect Skill nodes to the **input-skill** handle to extend the Chat Agent's capabilities:
+
+```
+[WhatsApp Skill] --+
+                   +--> [Chat Agent] --> [Response]
+[Maps Skill] ------+
+```
+
+Skills provide domain-specific instructions and allowed tools to the Chat Agent.
+
+### Input Methods
+
+1. **Template Variable (Explicit)**:
+   ```
+   Prompt: {{chatTrigger.message}}
+   ```
+
+2. **Auto-Fallback (Implicit)**: Leave Prompt empty - the agent reads from the connected input node automatically.
+
+### Output
+
+```json
+{
+  "response": "Chat Agent's response",
+  "thinking": "Reasoning (if enabled)",
+  "model": "claude-3-5-sonnet",
+  "provider": "anthropic"
+}
+```
+
+---
+
+## Simple Memory Node
+
+Stores conversation history in markdown format for AI agents.
 
 ### Connection
 
-Simple Memory connects to the AI Agent's **memory handle** (diamond shape on bottom-left):
+Simple Memory connects to the **memory handle** (diamond shape on bottom-left):
 
 ```
-[Simple Memory] ---(diamond)---> [AI Agent]
+[Simple Memory] ---(diamond)---> [AI Agent or Chat Agent]
 ```
 
 <Warning>
 Connect to the diamond handle, not the main input. The main input is for data flow.
 </Warning>
 
-### Session Management
+### Parameters
 
-Use dynamic session IDs for multi-user scenarios:
+<ParamField path="sessionId" type="string" default="default">
+  Unique identifier for the conversation session. Use dynamic values for multi-user scenarios.
+</ParamField>
+
+<ParamField path="windowSize" type="number" default="10">
+  Number of message pairs to keep in short-term memory
+</ParamField>
+
+<ParamField path="memoryContent" type="string">
+  Editable conversation history in markdown format. View and edit directly in the parameter panel.
+</ParamField>
+
+<ParamField path="longTermEnabled" type="boolean" default="false">
+  Archive old messages to vector DB for semantic retrieval
+</ParamField>
+
+<ParamField path="retrievalCount" type="number" default="3">
+  Number of relevant memories to retrieve from long-term storage (shown when longTermEnabled is true)
+</ParamField>
+
+### Memory Format
+
+Conversation history is stored in markdown:
+
+```markdown
+# Conversation History
+
+### **Human** (2025-01-30 14:23:45)
+What is the weather like today?
+
+### **Assistant** (2025-01-30 14:23:48)
+I don't have access to real-time weather data...
+```
+
+### Memory Flow
+
+1. Agent reads `memoryContent` markdown from connected Simple Memory node
+2. Parses markdown to LangChain message format
+3. (If enabled) Retrieves relevant context from vector store
+4. Executes with conversation history
+5. Appends new messages to markdown
+6. Trims to keep last N pairs (windowSize)
+7. Archives removed messages to vector store (if longTermEnabled)
+8. Saves updated markdown back to node parameters
+
+### Dynamic Session IDs
+
+For multi-user scenarios, use template variables:
 
 ```
 Session ID: {{webhookTrigger.body.user_id}}
@@ -101,31 +216,60 @@ Session ID: {{webhookTrigger.body.user_id}}
 
 This creates separate memory for each user.
 
-### Output
+---
 
-Simple Memory is a **config node** - it doesn't produce output. The AI Agent reads its configuration directly.
+## Building Agent Workflows
 
-## Building an Agent Workflow
-
-### Basic Setup
+### Basic AI Agent with Tools
 
 ```
 [Webhook Trigger] --> [AI Agent] --> [Webhook Response]
                           ^
                           |
                    [Simple Memory]
-                          ^
+
+                   [Calculator Tool]
                           |
-                   [OpenAI Chat]
+                          v
+                     [AI Agent]
 ```
 
-### Step-by-Step
+### Chat Agent with Skills
 
-1. **Add AI Agent** from AI Agents category
-2. **Add Simple Memory** and connect to memory handle
-3. **Add AI Model** and connect to model handle (optional)
-4. **Add Trigger** (Webhook, WhatsApp, etc.) connected to main input
+```
+[Chat Trigger] --> [Chat Agent] --> [Console]
+                        ^
+                        |
+                 [Simple Memory]
+
+                 [WhatsApp Skill]
+                        |
+                        v
+                   [Chat Agent]
+```
+
+### Step-by-Step Setup
+
+1. **Add AI Agent or Chat Agent** from AI Agents category
+2. **Add Simple Memory** and connect to memory handle (diamond)
+3. **Add Tools/Skills** and connect to respective handles
+4. **Add Trigger** (Webhook, Chat, WhatsApp) connected to main input
 5. **Add Response** node connected to agent output
+
+---
+
+## AI Agent vs Chat Agent
+
+| Feature | AI Agent | Chat Agent |
+|---------|----------|------------|
+| Primary Use | Complex reasoning tasks | Conversational interactions |
+| Tool Calling | Yes (LangGraph) | Yes (LangGraph) |
+| Memory Support | Yes | Yes |
+| Skill Support | No | Yes |
+| Bottom Handles | Memory, Tools | Memory, Skills, Tools |
+| Best For | Task automation, reasoning | Chat interfaces, multi-turn dialog |
+
+---
 
 ## Multi-Turn Conversation Example
 
@@ -145,26 +289,7 @@ curl -X POST http://localhost:3010/webhook/chat \
 
 Response: "Your name is Alex, as you told me earlier."
 
-## Memory Persistence
-
-- Memory is stored in **SQLite** database
-- Survives server restarts
-- Managed automatically by the AI Agent
-
-### Clearing Memory
-
-To clear a session's memory, delete the session from the database or create a new session ID.
-
-## Advanced: Window Mode
-
-For long-running conversations, use Window mode to limit memory:
-
-```
-Memory Type: Window
-Window Size: 10
-```
-
-This keeps only the last 10 message pairs, preventing context overflow.
+---
 
 ## Tips
 
@@ -180,9 +305,15 @@ Set **Max Iterations** based on task complexity. Simple Q&A: 1-2, Complex reason
 Use unique **Session IDs** per user/conversation for proper isolation.
 </Tip>
 
+<Tip>
+Connect **Skills** to Chat Agent for domain-specific behavior (WhatsApp, Maps, HTTP, etc.).
+</Tip>
+
 <Warning>
-Long conversations with Buffer mode can exceed model context limits. Use Window mode for production.
+Long conversations with large window sizes can exceed model context limits. Use appropriate windowSize for your use case.
 </Warning>
+
+---
 
 ## Troubleshooting
 
@@ -192,23 +323,37 @@ Long conversations with Buffer mode can exceed model context limits. Use Window 
   - Ensure workflow is deployed (not just saved)
 </Accordion>
 
-<Accordion title="Agent gives inconsistent responses">
-  - Check if Session ID changes between requests
-  - Verify memory type and window size settings
-  - Review system prompt for clarity
+<Accordion title="Agent doesn't use connected tools">
+  - Verify Tool nodes are connected to the input-tools diamond handle
+  - Check tool node has proper schema/description
+  - Ensure the prompt requires tool usage
+</Accordion>
+
+<Accordion title="Skills not affecting Chat Agent behavior">
+  - Verify Skill nodes are connected to input-skill handle
+  - Check skill SKILL.md content is valid
+  - Ensure skill's allowed-tools match connected tool nodes
 </Accordion>
 
 <Accordion title="Memory grows too large">
-  - Switch to Window mode
-  - Set appropriate window size (10-20 messages)
+  - Reduce windowSize setting (10-20 messages recommended)
+  - Enable long-term memory to archive old messages
   - Consider clearing sessions periodically
 </Accordion>
+
+---
 
 ## Related
 
 <CardGroup cols={2}>
   <Card title="AI Models" icon="brain" href="/nodes/ai-models">
-    Available chat models
+    6 AI providers with thinking modes
+  </Card>
+  <Card title="AI Skills" icon="wand-magic-sparkles" href="/nodes/skills">
+    10 skill nodes for Chat Agent
+  </Card>
+  <Card title="AI Tools" icon="screwdriver-wrench" href="/nodes/tools">
+    Tool nodes for AI agents
   </Card>
   <Card title="AI Tutorial" icon="graduation-cap" href="/tutorials/ai-agent-workflow">
     Step-by-step agent tutorial

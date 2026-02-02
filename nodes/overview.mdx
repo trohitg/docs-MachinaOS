@@ -11,12 +11,19 @@ MachinaOs uses a visual node-based system for building workflows. Each node perf
 
 | Category | Count | Description |
 |----------|-------|-------------|
-| [AI Models](/nodes/ai-models) | 3 | Chat models from OpenAI, Anthropic, Google |
-| [AI Agents](/nodes/ai-agent) | 2 | Intelligent agents with memory |
+| [AI Models](/nodes/ai-models) | 6 | OpenAI, Anthropic, Google, OpenRouter, Groq, Cerebras |
+| [AI Agents](/nodes/ai-agent) | 3 | AI Agent, Chat Agent, Simple Memory |
+| [AI Skills](/nodes/skills) | 10 | Skill nodes for Chat Agent |
+| [AI Tools](/nodes/tools) | 4 | Calculator, Time, Search, Android Toolkit |
 | [WhatsApp](/nodes/whatsapp) | 3 | Messaging automation |
 | [Android](/nodes/android) | 17 | Device control and monitoring |
-| [Webhooks](/nodes/webhooks) | 3 | HTTP requests and webhook handling |
-| [Schedulers](/nodes/schedulers) | 3 | Triggers and timing |
+| [Webhooks](/nodes/webhooks) | 5 | HTTP requests, webhooks, chat trigger, console |
+| [Code](/nodes/schedulers) | 2 | Python and JavaScript executors |
+| [Location](/nodes/android) | 3 | Google Maps integration |
+| [Documents](/nodes/documents) | 6 | RAG pipeline: scrape, parse, embed, store |
+| Workflow | 1 | Start node |
+
+**Total: 60 nodes**
 
 ## Node Shapes
 
@@ -161,21 +168,27 @@ Config nodes (Memory, Models) connect to diamond handles, not main inputs.
 
 <CardGroup cols={2}>
   <Card title="AI Models" icon="brain" href="/nodes/ai-models">
-    OpenAI, Claude, Gemini
+    6 providers: OpenAI, Claude, Gemini, OpenRouter, Groq, Cerebras
   </Card>
   <Card title="AI Agents" icon="robot" href="/nodes/ai-agent">
-    Agent with memory and tools
+    AI Agent and Chat Agent with memory and tools
   </Card>
-  <Card title="WhatsApp" icon="whatsapp" href="/nodes/whatsapp">
-    Send and receive messages
+  <Card title="AI Skills" icon="wand-magic-sparkles" href="/nodes/skills">
+    10 skill nodes for Chat Agent
+  </Card>
+  <Card title="AI Tools" icon="screwdriver-wrench" href="/nodes/tools">
+    Calculator, time, search, Android toolkit
+  </Card>
+  <Card title="WhatsApp" icon="message" href="/nodes/whatsapp">
+    Send, receive, and query messages
   </Card>
   <Card title="Android" icon="mobile" href="/nodes/android">
     17 device control nodes
   </Card>
-  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
-    HTTP and webhook handling
+  <Card title="Documents" icon="file-lines" href="/nodes/documents">
+    RAG pipeline: scrape, parse, embed, store
   </Card>
-  <Card title="Schedulers" icon="clock" href="/nodes/schedulers">
-    Triggers and timers
+  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
+    HTTP, webhooks, and utilities
   </Card>
 </CardGroup>

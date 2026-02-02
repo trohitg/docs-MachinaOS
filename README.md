@@ -1,16 +1,12 @@
 # MachinaOs Documentation
 
-This folder contains the Mintlify documentation for MachinaOs.
+Official documentation for [MachinaOS](https://github.com/trohitg/MachinaOS) - an open-source workflow automation platform with AI agents, React Flow, and n8n-inspired architecture.
 
-## Setup
+**60 nodes** | **6 AI providers** | **Dracula theme**
 
-1. Create a new repository `trohitg/machinaos-docs` on GitHub
-2. Copy the contents of this folder to the new repository
-3. Connect the repository to Mintlify:
-   - Go to [mintlify.com](https://mintlify.com)
-   - Click "Get Started" and sign in with GitHub
-   - Select your `machinaos-docs` repository
-   - Mintlify will automatically deploy your docs
+## Live Docs
+
+https://docs.machinaos.dev
 
 ## Local Development
 
@@ -19,67 +15,91 @@ This folder contains the Mintlify documentation for MachinaOs.
 npm install -g mintlify
 
 # Run local dev server
-cd docs-mintlify
 mintlify dev
 ```
 
 The docs will be available at http://localhost:3000
 
+## Documentation Coverage
+
+### Node Catalog (60 nodes)
+
+| Category | Count | Page |
+|----------|-------|------|
+| AI Models | 6 | [ai-models.mdx](nodes/ai-models.mdx) |
+| AI Agents | 3 | [ai-agent.mdx](nodes/ai-agent.mdx) |
+| AI Skills | 10 | [skills.mdx](nodes/skills.mdx) |
+| AI Tools | 4 | [tools.mdx](nodes/tools.mdx) |
+| WhatsApp | 3 | [whatsapp.mdx](nodes/whatsapp.mdx) |
+| Android | 17 | [android.mdx](nodes/android.mdx) |
+| Documents | 6 | [documents.mdx](nodes/documents.mdx) |
+| Webhooks | 5 | [webhooks.mdx](nodes/webhooks.mdx) |
+| Location | 3 | [android.mdx](nodes/android.mdx) |
+| Code | 2 | [schedulers.mdx](nodes/schedulers.mdx) |
+| Workflow | 1 | - |
+
+### AI Providers
+
+- **OpenAI** - GPT-4o, GPT-4 Turbo, o1, o3, o4-mini
+- **Anthropic** - Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku
+- **Google** - Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.0 Flash Thinking
+- **OpenRouter** - 200+ models via unified API
+- **Groq** - Llama, Mixtral, Qwen (ultra-fast)
+- **Cerebras** - Llama, Qwen (ultra-fast)
+
 ## Structure
 
 ```
-docs-mintlify/
-├── docs.json           # Mintlify configuration
+docs-MachinaOs/
+├── docs.json           # Mintlify config (Dracula theme)
 ├── introduction.mdx    # Home page
 ├── installation.mdx    # Setup guide
 ├── quickstart.mdx      # Quick start tutorial
-├── faq.mdx            # FAQ page
-├── tutorials/         # Step-by-step guides
+├── faq.mdx             # FAQ
+├── tutorials/          # Step-by-step guides
 │   ├── first-workflow.mdx
 │   ├── ai-agent-workflow.mdx
 │   ├── whatsapp-automation.mdx
 │   └── android-automation.mdx
-├── nodes/             # Node documentation
-│   ├── overview.mdx
-│   ├── ai-models.mdx
-│   ├── ai-agent.mdx
+├── nodes/              # Node documentation
+│   ├── overview.mdx    # All 60 nodes overview
+│   ├── ai-models.mdx   # 6 AI providers
+│   ├── ai-agent.mdx    # AI Agent, Chat Agent, Memory
+│   ├── skills.mdx      # 10 skill nodes
+│   ├── tools.mdx       # 4 tool nodes
+│   ├── documents.mdx   # 6 RAG pipeline nodes
 │   ├── whatsapp.mdx
 │   ├── android.mdx
 │   ├── webhooks.mdx
 │   └── schedulers.mdx
-├── deployment/        # Deployment guides
+├── deployment/
 │   ├── docker.mdx
 │   └── production.mdx
-├── logo/              # Logo assets
-│   ├── dark.svg
-│   └── light.svg
-├── images/            # Screenshots and diagrams
-└── favicon.svg        # Browser favicon
+├── .github/workflows/  # Auto-deploy on push
+└── logo/
 ```
 
-## Adding Content
+## Theme
 
-1. Create new `.mdx` files in the appropriate folder
-2. Add frontmatter with title and description:
-   ```mdx
-   ---
-   title: Page Title
-   description: Brief description
-   ---
-   ```
-3. Update `docs.json` navigation to include new pages
-4. Commit and push - Mintlify auto-deploys
+Using Dracula color palette:
+- Primary: `#BD93F9` (purple)
+- Light: `#FF79C6` (pink)
+- Dark: `#6272A4` (comment)
+- Background: `#282A36` (dark)
+- Code blocks: Dracula syntax highlighting
+
+## Contributing
+
+1. Edit `.mdx` files
+2. Test locally with `mintlify dev`
+3. Commit and push - auto-deploys via GitHub Actions
 
 ## Mintlify Components
 
-Common components used in docs:
-
-- `<Card>` - Feature cards with icons
-- `<CardGroup>` - Grid layout for cards
+- `<Card>`, `<CardGroup>` - Feature cards
 - `<Tabs>` - Tabbed content
 - `<Accordion>` - Collapsible sections
-- `<Info>`, `<Warning>`, `<Tip>` - Callout boxes
-- `<ParamField>` - Parameter documentation
-- `<Check>` - Success checkmarks
+- `<Info>`, `<Warning>`, `<Tip>` - Callouts
+- `<ParamField>` - Parameter docs
 
-See [Mintlify docs](https://mintlify.com/docs) for full component reference.
+See [Mintlify docs](https://mintlify.com/docs) for full reference.

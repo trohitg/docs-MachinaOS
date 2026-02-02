@@ -1,0 +1,358 @@
+---
+title: AI Tools
+description: Tool nodes that give AI Agents capabilities to perform actions
+---
+
+# AI Tools
+
+Tool nodes provide capabilities that AI Agents can invoke during reasoning. Each tool defines a schema that the LLM understands and uses to decide when and how to call the tool.
+
+## How Tools Work
+
+1. **Connect** Tool nodes to the AI Agent's `input-tools` handle (diamond shape)
+2. **Agent discovers** connected tools and their schemas
+3. **LLM decides** when to call tools based on the user's request
+4. **Tool executes** and returns results to the agent
+5. **Agent continues** reasoning with the tool's output
+
+```
+[Calculator Tool] --+
+                    +--(tools handle)--> [AI Agent] --> [Output]
+[Web Search Tool] --+
+```
+
+## Available Tools
+
+| Tool | Description | Use Case |
+|------|-------------|----------|
+| Calculator | Math operations | Calculations, arithmetic |
+| Current Time | Date/time with timezone | Scheduling, time-based logic |
+| Web Search | Search the internet | Current information, research |
+| Android Toolkit | Android device control | Device automation |
+
+---
+
+## Calculator Tool
+
+Performs mathematical operations including basic arithmetic and advanced functions.
+
+### Operations
+
+| Operation | Description | Example |
+|-----------|-------------|---------|
+| add | Addition | 5 + 3 = 8 |
+| subtract | Subtraction | 10 - 4 = 6 |
+| multiply | Multiplication | 6 * 7 = 42 |
+| divide | Division | 20 / 4 = 5 |
+| power | Exponentiation | 2^8 = 256 |
+| sqrt | Square root | sqrt(16) = 4 |
+| mod | Modulo | 17 % 5 = 2 |
+| abs | Absolute value | abs(-5) = 5 |
+
+### Parameters
+
+<ParamField path="toolName" type="string" default="calculator">
+  Tool identifier shown to the LLM
+</ParamField>
+
+<ParamField path="toolDescription" type="string">
+  Description of the tool's capabilities for the LLM
+</ParamField>
+
+### Schema (LLM View)
+
+```json
+{
+  "operation": "add | subtract | multiply | divide | power | sqrt | mod | abs",
+  "a": "number (first operand)",
+  "b": "number (second operand, optional for sqrt/abs)"
+}
+```
+
+### Example Interaction
+
+```
+User: "What's 15% of 230?"
+Agent: [Calls calculator with multiply(230, 0.15)]
+       "15% of 230 is 34.5"
+```
+
+---
+
+## Current Time Tool
+
+Gets the current date and time with timezone support.
+
+### Parameters
+
+<ParamField path="toolName" type="string" default="currentTime">
+  Tool identifier shown to the LLM
+</ParamField>
+
+<ParamField path="toolDescription" type="string">
+  Description of the tool's capabilities
+</ParamField>
+
+<ParamField path="defaultTimezone" type="string" default="UTC">
+  Default timezone (e.g., "America/New_York", "Europe/London", "Asia/Tokyo")
+</ParamField>
+
+### Schema (LLM View)
+
+```json
+{
+  "timezone": "string (optional, defaults to UTC)"
+}
+```
+
+### Output
+
+```json
+{
+  "datetime": "2025-01-30T14:30:00-05:00",
+  "date": "2025-01-30",
+  "time": "14:30:00",
+  "timezone": "America/New_York",
+  "day_of_week": "Thursday",
+  "unix_timestamp": 1738262000
+}
+```
+
+### Example Interaction
+
+```
+User: "What time is it in Tokyo?"
+Agent: [Calls currentTime with timezone="Asia/Tokyo"]
+       "It's currently 4:30 AM on Friday in Tokyo."
+```
+
+---
+
+## Web Search Tool
+
+Searches the internet using DuckDuckGo (free) or Serper API (requires API key).
+
+### Parameters
+
+<ParamField path="toolName" type="string" default="webSearch">
+  Tool identifier shown to the LLM
+</ParamField>
+
+<ParamField path="toolDescription" type="string">
+  Description of the tool's capabilities
+</ParamField>
+
+<ParamField path="provider" type="select" default="duckduckgo">
+  Search provider: "duckduckgo" (free) or "serper" (API key required)
+</ParamField>
+
+<ParamField path="maxResults" type="number" default="5">
+  Maximum number of search results to return
+</ParamField>
+
+### Schema (LLM View)
+
+```json
+{
+  "query": "string (search query)",
+  "max_results": "number (optional, 1-10)"
+}
+```
+
+### Output
+
+```json
+{
+  "results": [
+    {
+      "title": "Result Title",
+      "url": "https://example.com/page",
+      "snippet": "Brief description of the page..."
+    }
+  ],
+  "query": "original search query"
+}
+```
+
+### Example Interaction
+
+```
+User: "What are the latest developments in quantum computing?"
+Agent: [Calls webSearch with query="quantum computing news 2025"]
+       "Here are the latest developments in quantum computing:
+        1. IBM announced a new 1000-qubit processor...
+        2. Google achieved quantum error correction milestone..."
+```
+
+### Provider Comparison
+
+| Feature | DuckDuckGo | Serper |
+|---------|------------|--------|
+| Cost | Free | Paid (API key) |
+| Rate Limits | Moderate | High |
+| Result Quality | Good | Excellent |
+| Setup | None | API key required |
+
+---
+
+## Android Toolkit
+
+Gateway tool that aggregates Android service nodes for device control.
+
+### Architecture
+
+The Android Toolkit follows the **Sub-Node** pattern from n8n and **Toolkit** pattern from LangChain:
+
+```
+[Battery Monitor] --+
+[WiFi Automation] --+--(main input)--> [Android Toolkit] --(tools handle)--> [AI Agent]
+[Location] --------+
+```
+
+Connected Android service nodes define what the toolkit can do. The LLM sees a single `android_device` tool with capabilities based on connected services.
+
+### Parameters
+
+<ParamField path="toolName" type="string" default="android_device">
+  Tool identifier shown to the LLM
+</ParamField>
+
+<ParamField path="toolDescription" type="string">
+  Description of the toolkit's capabilities
+</ParamField>
+
+### Schema (Dynamic)
+
+The schema is built dynamically based on connected Android service nodes:
+
+```json
+{
+  "service_id": "battery | wifi_automation | location | ...",
+  "action": "status | enable | disable | get | set | ...",
+  "parameters": {
+    // Action-specific parameters
+  }
+}
+```
+
+### Connecting Services
+
+1. Add Android service nodes (Battery Monitor, WiFi Automation, etc.)
+2. Connect them to the Android Toolkit's main input
+3. Connect the Toolkit to the AI Agent's tools handle
+
+Only connected services are available to the agent.
+
+### Tool Schema Editor
+
+The Android Toolkit includes a schema editor for customizing how the LLM sees each service:
+
+1. Select the Android Toolkit node
+2. Open the Tool Schema Editor
+3. Select a connected service
+4. Customize the description, fields, and types
+5. Save changes
+
+### Example Interaction
+
+```
+User: "Check the battery level and turn on WiFi if it's above 50%"
+Agent: [Calls android_device with service_id="battery", action="status"]
+       Battery is at 72%
+       [Calls android_device with service_id="wifi_automation", action="enable"]
+       "Battery is at 72%, which is above 50%. I've enabled WiFi."
+```
+
+### Available Services
+
+When corresponding Android service nodes are connected:
+
+| Service | Actions | Description |
+|---------|---------|-------------|
+| battery | status | Battery level, charging state, health |
+| wifi_automation | status, enable, disable, scan | WiFi control |
+| bluetooth_automation | status, enable, disable, paired | Bluetooth control |
+| location | get | GPS coordinates |
+| app_launcher | launch | Launch apps by package name |
+| app_list | list | Installed applications |
+| audio_automation | get, set, mute, unmute | Volume control |
+| camera_control | info, capture | Camera operations |
+| motion_detection | get | Accelerometer/gyroscope data |
+| environmental_sensors | get | Temperature, humidity, light |
+
+---
+
+## Tool Execution Flow
+
+When the AI Agent calls a tool:
+
+1. **Status broadcast** - `executing_tool` status sent to frontend
+2. **Tool node highlighted** - Shows cyan border and pulse animation
+3. **Handler executed** - Backend runs the tool's handler function
+4. **Result returned** - Output sent back to the agent
+5. **Agent continues** - Incorporates result into response
+
+### Tool Output in Variables
+
+Tool outputs are available as template variables:
+
+```
+{{calculatorTool.result}}
+{{webSearchTool.results}}
+{{androidTool.output}}
+```
+
+---
+
+## Creating Custom Tools
+
+To add custom tools, see the [AI Tool Node Guide](https://github.com/trohitg/MachinaOS/blob/main/docs-internal/ai_tool_node_creation.md) in the repository.
+
+Key steps:
+1. Define node in `client/src/nodeDefinitions/toolNodes.ts`
+2. Add schema in `server/services/ai.py`
+3. Add handler in `server/services/handlers/tools.py`
+4. Update `TOOL_NODE_TYPES` array
+
+---
+
+## Tips
+
+<Tip>
+Connect only the tools the agent needs. Too many tools can confuse the LLM.
+</Tip>
+
+<Tip>
+Provide clear **toolDescription** to help the LLM understand when to use each tool.
+</Tip>
+
+<Tip>
+Use **Web Search** for current information not in the model's training data.
+</Tip>
+
+<Tip>
+The **Android Toolkit** only shows services you connect - add only what you need.
+</Tip>
+
+<Warning>
+Tool nodes execute when the AI Agent calls them, not when the workflow runs. They're passive until invoked.
+</Warning>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="AI Agents" icon="robot" href="/nodes/ai-agent">
+    Connect tools to AI Agent
+  </Card>
+  <Card title="AI Skills" icon="wand-magic-sparkles" href="/nodes/skills">
+    Skills that use tools
+  </Card>
+  <Card title="Android Nodes" icon="mobile" href="/nodes/android">
+    17 Android service nodes
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
+    HTTP Request node
+  </Card>
+</CardGroup>

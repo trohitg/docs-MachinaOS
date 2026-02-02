@@ -1,0 +1,503 @@
+---
+title: Document Processing
+description: RAG pipeline nodes for document ingestion, processing, and vector storage
+---
+
+# Document Processing
+
+MachinaOs provides a complete RAG (Retrieval-Augmented Generation) pipeline for processing documents, generating embeddings, and storing vectors for semantic search.
+
+## Pipeline Overview
+
+```
+[HTTP Scraper] --> [File Downloader] --> [Document Parser] --> [Text Chunker] --> [Embedding Generator] --> [Vector Store]
+```
+
+| Stage | Node | Purpose |
+|-------|------|---------|
+| 1. Collect | HTTP Scraper | Scrape URLs from web pages |
+| 2. Download | File Downloader | Download files in parallel |
+| 3. Parse | Document Parser | Extract text from documents |
+| 4. Chunk | Text Chunker | Split text into overlapping chunks |
+| 5. Embed | Embedding Generator | Generate vector embeddings |
+| 6. Store | Vector Store | Store and query vectors |
+
+---
+
+## HTTP Scraper
+
+Scrapes links from web pages with support for pagination and date ranges.
+
+### Modes
+
+| Mode | Description | Use Case |
+|------|-------------|----------|
+| Single | One request to URL | Simple page scraping |
+| Date Range | Iterate through dates | News archives, dated content |
+| Pagination | Follow page numbers | Multi-page listings |
+
+### Parameters
+
+<ParamField path="url" type="string" required>
+  URL to scrape. Use `{{date}}` or `{{page}}` placeholders for iteration.
+</ParamField>
+
+<ParamField path="mode" type="select" default="single">
+  Scraping mode: single, date_range, or pagination
+</ParamField>
+
+<ParamField path="linkSelector" type="string" default="a">
+  CSS selector for links to extract
+</ParamField>
+
+<ParamField path="startDate" type="string">
+  Start date for date_range mode (YYYY-MM-DD)
+</ParamField>
+
+<ParamField path="endDate" type="string">
+  End date for date_range mode (YYYY-MM-DD)
+</ParamField>
+
+<ParamField path="startPage" type="number" default="1">
+  Start page for pagination mode
+</ParamField>
+
+<ParamField path="endPage" type="number" default="10">
+  End page for pagination mode
+</ParamField>
+
+### Output
+
+```json
+{
+  "items": [
+    {"url": "https://example.com/article1.pdf"},
+    {"url": "https://example.com/article2.pdf"}
+  ],
+  "count": 2
+}
+```
+
+### Example: Scrape News Archive
+
+```
+URL: https://news.site/archive/{{date}}
+Mode: date_range
+Start Date: 2025-01-01
+End Date: 2025-01-31
+Link Selector: a.article-link
+```
+
+---
+
+## File Downloader
+
+Downloads files from URLs in parallel using semaphore-based concurrency.
+
+### Parameters
+
+<ParamField path="outputDirectory" type="string" required>
+  Directory to save downloaded files
+</ParamField>
+
+<ParamField path="maxWorkers" type="number" default="5">
+  Maximum parallel downloads (1-32)
+</ParamField>
+
+<ParamField path="skipExisting" type="boolean" default="true">
+  Skip files that already exist
+</ParamField>
+
+<ParamField path="timeout" type="number" default="30000">
+  Download timeout in milliseconds
+</ParamField>
+
+### Input
+
+Expects array of items with `url` field (from HTTP Scraper):
+
+```json
+{
+  "items": [
+    {"url": "https://example.com/file1.pdf"},
+    {"url": "https://example.com/file2.pdf"}
+  ]
+}
+```
+
+### Output
+
+```json
+{
+  "downloaded": [
+    {"url": "...", "path": "/output/file1.pdf", "size": 1024000},
+    {"url": "...", "path": "/output/file2.pdf", "size": 2048000}
+  ],
+  "failed": [],
+  "skipped": 0,
+  "total": 2
+}
+```
+
+---
+
+## Document Parser
+
+Parses documents to extract text content using configurable parsers.
+
+### Parsers
+
+| Parser | Description | Supported Formats |
+|--------|-------------|-------------------|
+| PyPDF | Fast PDF parsing | PDF |
+| Marker | GPU-accelerated OCR | PDF (scanned documents) |
+| Unstructured | Multi-format parsing | PDF, DOCX, HTML, TXT, MD |
+| BeautifulSoup | HTML parsing | HTML |
+
+### Parameters
+
+<ParamField path="parser" type="select" default="pypdf">
+  Parser to use: pypdf, marker, unstructured, beautifulsoup
+</ParamField>
+
+<ParamField path="inputDirectory" type="string" required>
+  Directory containing files to parse (or from File Downloader)
+</ParamField>
+
+### Input
+
+Accepts paths from File Downloader or a directory:
+
+```json
+{
+  "downloaded": [
+    {"path": "/output/file1.pdf"},
+    {"path": "/output/file2.pdf"}
+  ]
+}
+```
+
+### Output
+
+```json
+{
+  "documents": [
+    {
+      "path": "/output/file1.pdf",
+      "text": "Extracted text content...",
+      "pages": 10,
+      "parser": "pypdf"
+    }
+  ],
+  "total": 2,
+  "failed": 0
+}
+```
+
+### Parser Comparison
+
+| Feature | PyPDF | Marker | Unstructured | BeautifulSoup |
+|---------|-------|--------|--------------|---------------|
+| Speed | Fast | Slow | Medium | Fast |
+| Accuracy | Good | Excellent | Good | Good |
+| OCR | No | Yes (GPU) | Optional | No |
+| Formats | PDF | PDF | Many | HTML |
+| GPU Required | No | Yes | No | No |
+
+---
+
+## Text Chunker
+
+Splits text into overlapping chunks for embedding generation.
+
+### Strategies
+
+| Strategy | Description | Best For |
+|----------|-------------|----------|
+| Recursive | Split by paragraphs, sentences, words | Most documents |
+| Markdown | Preserve markdown structure | Markdown files |
+| Token | Split by token count | Consistent chunk sizes |
+
+### Parameters
+
+<ParamField path="strategy" type="select" default="recursive">
+  Chunking strategy: recursive, markdown, or token
+</ParamField>
+
+<ParamField path="chunkSize" type="number" default="1000">
+  Target chunk size in characters (100-8000)
+</ParamField>
+
+<ParamField path="chunkOverlap" type="number" default="200">
+  Overlap between chunks (0-1000)
+</ParamField>
+
+### Input
+
+```json
+{
+  "documents": [
+    {"path": "...", "text": "Long document text..."}
+  ]
+}
+```
+
+### Output
+
+```json
+{
+  "chunks": [
+    {
+      "text": "Chunk 1 text...",
+      "metadata": {
+        "source": "/output/file1.pdf",
+        "chunk_index": 0,
+        "start_char": 0,
+        "end_char": 1000
+      }
+    }
+  ],
+  "total_chunks": 50
+}
+```
+
+### Choosing Chunk Size
+
+| Document Type | Recommended Size | Overlap |
+|---------------|------------------|---------|
+| Technical docs | 500-1000 | 100-200 |
+| Articles | 1000-1500 | 200-300 |
+| Books | 1500-2000 | 300-400 |
+| Code | 500-800 | 100-150 |
+
+---
+
+## Embedding Generator
+
+Generates vector embeddings from text chunks using various providers.
+
+### Providers
+
+| Provider | Model | Dimensions | Cost |
+|----------|-------|------------|------|
+| HuggingFace | BAAI/bge-small-en-v1.5 | 384 | Free (local) |
+| HuggingFace | BAAI/bge-large-en-v1.5 | 1024 | Free (local) |
+| OpenAI | text-embedding-3-small | 1536 | Paid |
+| OpenAI | text-embedding-3-large | 3072 | Paid |
+| Ollama | nomic-embed-text | 768 | Free (local) |
+
+### Parameters
+
+<ParamField path="provider" type="select" default="huggingface">
+  Embedding provider: huggingface, openai, or ollama
+</ParamField>
+
+<ParamField path="model" type="string" default="BAAI/bge-small-en-v1.5">
+  Model name/path for embeddings
+</ParamField>
+
+<ParamField path="batchSize" type="number" default="32">
+  Batch size for embedding generation
+</ParamField>
+
+### Input
+
+```json
+{
+  "chunks": [
+    {"text": "Chunk text...", "metadata": {...}}
+  ]
+}
+```
+
+### Output
+
+```json
+{
+  "embeddings": [
+    {
+      "text": "Chunk text...",
+      "embedding": [0.123, -0.456, ...],
+      "metadata": {...}
+    }
+  ],
+  "model": "BAAI/bge-small-en-v1.5",
+  "dimensions": 384,
+  "total": 50
+}
+```
+
+---
+
+## Vector Store
+
+Stores and queries vector embeddings using various backends.
+
+### Backends
+
+| Backend | Description | Best For |
+|---------|-------------|----------|
+| ChromaDB | Local SQLite-based | Development, small datasets |
+| Qdrant | High-performance | Production, large datasets |
+| Pinecone | Cloud-hosted | Serverless, managed service |
+
+### Operations
+
+| Operation | Description |
+|-----------|-------------|
+| store | Add embeddings to the store |
+| query | Search for similar documents |
+| delete | Remove documents by ID or filter |
+
+### Parameters
+
+<ParamField path="backend" type="select" default="chroma">
+  Vector store backend: chroma, qdrant, or pinecone
+</ParamField>
+
+<ParamField path="operation" type="select" default="store">
+  Operation: store, query, or delete
+</ParamField>
+
+<ParamField path="collectionName" type="string" required>
+  Collection/index name
+</ParamField>
+
+<ParamField path="topK" type="number" default="5">
+  Number of results for query operation
+</ParamField>
+
+### Store Operation
+
+Input (from Embedding Generator):
+```json
+{
+  "embeddings": [
+    {"text": "...", "embedding": [...], "metadata": {...}}
+  ]
+}
+```
+
+Output:
+```json
+{
+  "stored": 50,
+  "collection": "my-docs",
+  "backend": "chroma"
+}
+```
+
+### Query Operation
+
+Input:
+```json
+{
+  "query": "What is the main topic?",
+  "top_k": 5
+}
+```
+
+Output:
+```json
+{
+  "results": [
+    {
+      "text": "Relevant chunk text...",
+      "score": 0.89,
+      "metadata": {"source": "file1.pdf", "chunk_index": 5}
+    }
+  ],
+  "query": "What is the main topic?"
+}
+```
+
+---
+
+## Complete RAG Pipeline Example
+
+### Workflow
+
+```
+[HTTP Scraper] --> [File Downloader] --> [Document Parser] --> [Text Chunker] --> [Embedding Generator] --> [Vector Store]
+```
+
+### Configuration
+
+1. **HTTP Scraper**
+   - URL: `https://docs.example.com/api/{{page}}`
+   - Mode: pagination
+   - Link Selector: `a.pdf-link`
+
+2. **File Downloader**
+   - Output: `./downloads`
+   - Max Workers: 10
+
+3. **Document Parser**
+   - Parser: pypdf
+
+4. **Text Chunker**
+   - Strategy: recursive
+   - Chunk Size: 1000
+   - Overlap: 200
+
+5. **Embedding Generator**
+   - Provider: huggingface
+   - Model: BAAI/bge-small-en-v1.5
+
+6. **Vector Store**
+   - Backend: chroma
+   - Operation: store
+   - Collection: api-docs
+
+### Querying the Pipeline
+
+Create a separate workflow for querying:
+
+```
+[Webhook Trigger] --> [Embedding Generator] --> [Vector Store (query)] --> [AI Agent] --> [Webhook Response]
+```
+
+The AI Agent receives relevant context from the vector store to answer questions.
+
+---
+
+## Tips
+
+<Tip>
+Start with **ChromaDB** for development - no setup required.
+</Tip>
+
+<Tip>
+Use **HuggingFace** embeddings for free local processing without API keys.
+</Tip>
+
+<Tip>
+Adjust **chunk size** based on your embedding model's context window.
+</Tip>
+
+<Tip>
+Include meaningful **metadata** (source, page, section) for better retrieval context.
+</Tip>
+
+<Warning>
+GPU is required for the **Marker** parser (OCR). Use **PyPDF** for non-scanned documents.
+</Warning>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="AI Agents" icon="robot" href="/nodes/ai-agent">
+    Use RAG context with AI agents
+  </Card>
+  <Card title="Webhooks" icon="webhook" href="/nodes/webhooks">
+    HTTP Request for APIs
+  </Card>
+  <Card title="AI Models" icon="brain" href="/nodes/ai-models">
+    AI providers for generation
+  </Card>
+  <Card title="Code Execution" icon="code" href="/nodes/schedulers">
+    Python for custom processing
+  </Card>
+</CardGroup>

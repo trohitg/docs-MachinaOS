@@ -1,0 +1,446 @@
+---
+title: AI Skills
+description: Skill nodes that extend Chat Agent capabilities
+---
+
+# AI Skills
+
+Skill nodes connect to the Chat Agent's `input-skill` handle to provide domain-specific capabilities. Each skill defines instructions and allowed tools that guide the Chat Agent's behavior.
+
+## How Skills Work
+
+Skills are modular capabilities defined in Markdown files (SKILL.md) that follow the [Agent Skills specification](https://agentskills.io/specification):
+
+```yaml
+---
+name: skill-name
+description: Brief description for LLM visibility
+allowed-tools: tool1 tool2
+metadata:
+  author: machina
+  version: "1.0"
+---
+
+# Skill Instructions (Markdown)
+Detailed instructions loaded when skill is activated.
+```
+
+When connected to a Chat Agent, the skill's instructions are added to the system prompt, and its allowed tools become available.
+
+## Connecting Skills
+
+Skills connect to the Chat Agent's **input-skill** handle (diamond shape):
+
+```
+[WhatsApp Skill] --+
+                   +--(skill handle)--> [Chat Agent] --> [Output]
+[Maps Skill] ------+
+```
+
+Multiple skills can be connected simultaneously.
+
+---
+
+## Available Skills
+
+| Skill | Description | Allowed Tools |
+|-------|-------------|---------------|
+| Assistant | Default assistant personality | None |
+| WhatsApp | Send/receive WhatsApp messages | whatsappSend, whatsappDb |
+| Memory | Long-term memory management | None |
+| Maps | Location services via Google Maps | createMap, addLocations, showNearbyPlaces |
+| HTTP | Make HTTP requests to APIs | httpRequest |
+| Scheduler | Task scheduling with timers/cron | None |
+| Android | Android device control | androidTool |
+| Code | Execute Python/JavaScript code | pythonExecutor, javascriptExecutor |
+| Web Search | Search the web | webSearchTool |
+| Custom | User-created custom skills | Configurable |
+
+---
+
+## Assistant Skill
+
+Provides default assistant personality with helpful, harmless, honest responses.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="assistant">
+  Skill identifier
+</ParamField>
+
+### Behavior
+
+- Responds helpfully to general questions
+- Maintains conversation context
+- Polite and professional tone
+
+### Example Use Case
+
+Basic conversational assistant without specialized capabilities.
+
+---
+
+## WhatsApp Skill
+
+Enables the Chat Agent to send and receive WhatsApp messages.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="whatsapp">
+  Skill identifier
+</ParamField>
+
+### Allowed Tools
+
+- `whatsappSend` - Send messages (text, media, location, contact)
+- `whatsappDb` - Query chat history, contacts, groups
+
+### Behavior
+
+- Can send messages to individuals and groups
+- Can retrieve chat history and contact information
+- Handles media attachments (images, videos, documents)
+
+### Example Use Case
+
+```
+User: "Send a message to John saying I'll be late"
+Agent: [Uses whatsappSend to send message to John]
+       "I've sent the message to John."
+```
+
+---
+
+## Memory Skill
+
+Enables long-term memory management across conversations.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="memory">
+  Skill identifier
+</ParamField>
+
+### Behavior
+
+- Can store important information for later retrieval
+- Semantic search of stored memories
+- User preferences and facts retention
+
+### Example Use Case
+
+```
+User: "Remember that my favorite color is blue"
+Agent: [Stores preference in memory]
+       "I'll remember that your favorite color is blue."
+
+[Later conversation]
+User: "What's my favorite color?"
+Agent: [Retrieves from memory]
+       "Your favorite color is blue."
+```
+
+---
+
+## Maps Skill
+
+Provides location services via Google Maps API.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="maps">
+  Skill identifier
+</ParamField>
+
+### Allowed Tools
+
+- `createMap` - Create maps with custom center and zoom
+- `addLocations` - Geocode addresses to coordinates
+- `showNearbyPlaces` - Find nearby places (restaurants, stores, etc.)
+
+### Behavior
+
+- Address to coordinates conversion (geocoding)
+- Find nearby places by type
+- Get directions and distance
+
+### Example Use Case
+
+```
+User: "Find coffee shops near Times Square"
+Agent: [Uses addLocations to geocode, then showNearbyPlaces]
+       "I found 5 coffee shops near Times Square:
+        1. Starbucks - 0.1 miles
+        2. Blue Bottle Coffee - 0.2 miles
+        ..."
+```
+
+---
+
+## HTTP Skill
+
+Enables the Chat Agent to make HTTP requests to external APIs.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="http">
+  Skill identifier
+</ParamField>
+
+### Allowed Tools
+
+- `httpRequest` - Make GET, POST, PUT, DELETE, PATCH requests
+
+### Behavior
+
+- Call external REST APIs
+- Handle JSON request/response
+- Set custom headers and authentication
+
+### Example Use Case
+
+```
+User: "Get the current Bitcoin price from CoinGecko"
+Agent: [Uses httpRequest to call CoinGecko API]
+       "The current Bitcoin price is $45,230."
+```
+
+---
+
+## Scheduler Skill
+
+Enables task scheduling with timers and cron expressions.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="scheduler">
+  Skill identifier
+</ParamField>
+
+### Behavior
+
+- Schedule one-time tasks
+- Set up recurring tasks with cron expressions
+- Manage scheduled task list
+
+### Example Use Case
+
+```
+User: "Remind me to check email every morning at 9am"
+Agent: [Creates cron schedule]
+       "I've scheduled a reminder to check email at 9am daily."
+```
+
+---
+
+## Android Skill
+
+Enables Android device control and monitoring.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="android">
+  Skill identifier
+</ParamField>
+
+### Allowed Tools
+
+- `androidTool` - Gateway to Android service nodes
+
+### Behavior
+
+- Check device status (battery, network, location)
+- Control device settings (WiFi, Bluetooth, screen)
+- Launch apps and manage applications
+- Read sensor data (motion, environment)
+
+### Example Use Case
+
+```
+User: "Turn on WiFi and check the battery level"
+Agent: [Uses androidTool to enable WiFi and check battery]
+       "WiFi is now enabled. Battery is at 67% and charging."
+```
+
+---
+
+## Code Skill
+
+Enables Python and JavaScript code execution for calculations and data processing.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="code">
+  Skill identifier
+</ParamField>
+
+### Allowed Tools
+
+- `pythonExecutor` - Execute Python code
+- `javascriptExecutor` - Execute JavaScript code
+
+### Behavior
+
+- Perform complex calculations
+- Process and transform data
+- Generate formatted output
+
+### Example Use Case
+
+```
+User: "Calculate the compound interest on $10,000 at 5% for 10 years"
+Agent: [Uses pythonExecutor to calculate]
+       "The compound interest on $10,000 at 5% for 10 years is $6,288.95,
+        giving a total of $16,288.95."
+```
+
+---
+
+## Web Search Skill
+
+Enables web search capabilities via DuckDuckGo or Serper API.
+
+### Parameters
+
+<ParamField path="skillName" type="string" default="webSearch">
+  Skill identifier
+</ParamField>
+
+### Allowed Tools
+
+- `webSearchTool` - Search the web
+
+### Behavior
+
+- Search for current information
+- Find relevant web pages
+- Get real-time data not in training
+
+### Example Use Case
+
+```
+User: "What are the latest news about SpaceX?"
+Agent: [Uses webSearchTool]
+       "Here are the latest SpaceX news:
+        1. SpaceX launches 23 Starlink satellites...
+        2. Starship test flight scheduled for..."
+```
+
+---
+
+## Custom Skill
+
+User-created skills with configurable capabilities.
+
+### Parameters
+
+<ParamField path="skillName" type="select" required>
+  Select from skills stored in the database
+</ParamField>
+
+### Creating Custom Skills
+
+1. Create a SKILL.md file with the required format
+2. Store in the database via the Skills API
+3. Select in the Custom Skill node
+
+### SKILL.md Format
+
+```yaml
+---
+name: my-custom-skill
+description: Description visible to the LLM
+allowed-tools: httpRequest calculatorTool
+metadata:
+  author: your-name
+  version: "1.0"
+---
+
+# Custom Skill Instructions
+
+You are a specialized assistant that...
+
+## Available Actions
+- Action 1: Description
+- Action 2: Description
+
+## Guidelines
+- Guideline 1
+- Guideline 2
+```
+
+---
+
+## Skill Content Editor
+
+Skill nodes include a built-in code editor for viewing and editing SKILL.md content:
+
+1. Select a skill node
+2. View the skill instructions in the markdown editor
+3. Make changes as needed
+4. Click **Save** to update the SKILL.md file
+
+---
+
+## Combining Multiple Skills
+
+Multiple skills can be connected to a single Chat Agent:
+
+```
+[WhatsApp Skill] --+
+[Maps Skill] ------+---> [Chat Agent] --> [Output]
+[HTTP Skill] ------+
+```
+
+When multiple skills are connected:
+- All skill instructions are combined in the system prompt
+- All allowed tools from all skills become available
+- The agent can use capabilities from any connected skill
+
+### Example Multi-Skill Workflow
+
+```
+User: "Send John my current location on WhatsApp"
+Agent: [Uses Maps skill to get location]
+       [Uses WhatsApp skill to send location message]
+       "I've sent your current location to John on WhatsApp."
+```
+
+---
+
+## Tips
+
+<Tip>
+Connect only the skills you need. Too many skills can confuse the agent.
+</Tip>
+
+<Tip>
+Use **Custom Skills** to create domain-specific assistants for your use case.
+</Tip>
+
+<Tip>
+Skill instructions should be clear and specific about when to use each capability.
+</Tip>
+
+<Warning>
+Skills require corresponding Tool nodes to be connected for their allowed-tools to work.
+</Warning>
+
+---
+
+## Related
+
+<CardGroup cols={2}>
+  <Card title="AI Agents" icon="robot" href="/nodes/ai-agent">
+    Connect skills to Chat Agent
+  </Card>
+  <Card title="AI Tools" icon="screwdriver-wrench" href="/nodes/tools">
+    Tool nodes that skills can use
+  </Card>
+  <Card title="AI Models" icon="brain" href="/nodes/ai-models">
+    AI providers for Chat Agent
+  </Card>
+  <Card title="WhatsApp" icon="message" href="/nodes/whatsapp">
+    WhatsApp messaging nodes
+  </Card>
+</CardGroup>
