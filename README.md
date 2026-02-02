@@ -6,7 +6,7 @@ Official documentation for [MachinaOS](https://github.com/trohitg/MachinaOS) - a
 
 ## Live Docs
 
-https://docs.machinaos.dev
+https://docs.zeenie.xyz/
 
 ## Local Development
 
