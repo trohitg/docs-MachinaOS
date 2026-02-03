@@ -29,6 +29,8 @@ Tool nodes provide capabilities that AI Agents can invoke during reasoning. Each
 | Current Time | Date/time with timezone | Scheduling, time-based logic |
 | Web Search | Search the internet | Current information, research |
 | Android Toolkit | Android device control | Device automation |
+| AI Agent | Delegate to child agent | Complex sub-tasks (fire-and-forget) |
+| Specialized Agents | Domain-specific delegation | Android, coding, web, task, social |
 
 ---
 
@@ -301,6 +303,42 @@ Tool outputs are available as template variables:
 {{webSearchTool.results}}
 {{androidTool.output}}
 ```
+
+---
+
+## Agent Delegation Tool
+
+AI Agents and specialized agents can be connected as tools to parent agents, enabling hierarchical task delegation.
+
+### How It Works
+
+1. Connect any agent to a parent agent's `input-tools` handle
+2. Parent calls `delegate_to_<agent_type>(task, context)`
+3. Child spawns as background task (fire-and-forget)
+4. Parent continues immediately without waiting
+
+### Schema
+
+```json
+{
+  "task": "string (required) - The task to delegate",
+  "context": "string (optional) - Additional context"
+}
+```
+
+### Example
+
+```
+[AI Agent] <--tools-- [Coding Agent] <--tools-- [Python Executor]
+```
+
+Parent delegates: `delegate_to_coding_agent(task="Write a function to parse JSON")`
+
+Child agent executes independently with its own connected tools.
+
+<Tip>
+Use agent delegation for complex sub-tasks that don't need immediate results.
+</Tip>
 
 ---
 

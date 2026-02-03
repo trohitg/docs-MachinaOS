@@ -15,6 +15,18 @@ MachinaOs provides two types of AI agents for different use cases, plus a memory
 | Chat Agent | Conversational AI with skills | Skill-driven behavior, multi-turn chat |
 | Simple Memory | Conversation history storage | Markdown format, long-term vector storage |
 
+### Specialized Agents
+
+Pre-configured agents for specific domains. Same AI configuration as base agents with domain-focused defaults.
+
+| Agent | Description | Color |
+|-------|-------------|-------|
+| Android Control Agent | Android device control | Green |
+| Coding Agent | Code execution | Cyan |
+| Web Control Agent | Web automation | Red |
+| Task Management Agent | Task automation | Purple |
+| Social Media Agent | Social messaging | Green |
+
 ---
 
 ## AI Agent Node
@@ -265,9 +277,36 @@ This creates separate memory for each user.
 | Primary Use | Complex reasoning tasks | Conversational interactions |
 | Tool Calling | Yes (LangGraph) | Yes (LangGraph) |
 | Memory Support | Yes | Yes |
-| Skill Support | No | Yes |
-| Bottom Handles | Memory, Tools | Memory, Skills, Tools |
+| Skill Support | Yes | Yes |
+| Bottom Handles | Skill, Tools | Skill, Tools |
+| Left Handles | Input, Memory | Input, Memory |
 | Best For | Task automation, reasoning | Chat interfaces, multi-turn dialog |
+
+---
+
+## Async Agent Delegation
+
+Agents can delegate tasks to other agents connected via the `input-tools` handle. The parent agent continues immediately while the child works in the background.
+
+### How It Works
+
+1. Connect a specialized agent to a parent agent's `input-tools` handle
+2. Parent agent calls `delegate_to_<agent_type>(task="...", context="...")`
+3. Child agent spawns as background task
+4. Parent receives `{"status": "delegated", "task_id": "..."}` immediately
+5. Child executes independently with its own tools
+
+### Example
+
+```
+[AI Agent] <--tools-- [Android Control Agent] <--tools-- [Battery Monitor]
+                                              <--tools-- [WiFi Automation]
+```
+
+When the AI Agent needs Android control:
+- Calls `delegate_to_android_agent(task="Check battery and enable WiFi if low")`
+- Android Agent spawns in background with its own connected tools
+- AI Agent continues with other work
 
 ---
 

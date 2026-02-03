@@ -1,11 +1,11 @@
 ---
-title: WhatsApp Nodes
-description: Send, receive, and manage WhatsApp messages
+title: WhatsApp & Social Nodes
+description: WhatsApp messaging and multi-platform social communication
 ---
 
-# WhatsApp Nodes
+# WhatsApp & Social Nodes
 
-Automate WhatsApp messaging with three specialized nodes.
+Automate WhatsApp messaging and multi-platform social communication.
 
 ## Available Nodes
 
@@ -290,6 +290,35 @@ Respect WhatsApp's terms of service. Don't send spam or bulk unsolicited message
   - Ensure phone stays online
   - Don't use WhatsApp Web simultaneously
 </Accordion>
+
+---
+
+## Social Nodes
+
+Unified messaging nodes for multi-platform communication. Supports WhatsApp, Telegram, Discord, Slack, Signal, SMS, Webchat, Email, Matrix, Teams.
+
+### Social Receive
+
+Normalizes messages from any platform trigger into a unified format.
+
+**Output Fields:**
+- `channel` - Platform name
+- `message_id`, `sender_id`, `sender_name`
+- `text`, `message_type`, `timestamp`
+- `media` - Platform-specific media data
+
+### Social Send (Dual-Purpose)
+
+Send messages to any supported platform. Works as workflow node OR AI Agent tool.
+
+**Message Types:** text, image, video, audio, document, sticker, location, contact, poll, buttons, list
+
+```
+[Social Receive] --> [AI Agent] --> [Social Send]
+                          ^
+                          |
+                    [Social Send as Tool]
+```
 
 ---
 
