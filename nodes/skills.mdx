@@ -27,6 +27,17 @@ Detailed instructions loaded when skill is activated.
 
 When connected to a Chat Agent, the skill's instructions are added to the system prompt, and its allowed tools become available.
 
+### Database as Source of Truth
+
+Skill instructions follow a **DB-first architecture**:
+
+1. **First load** reads from the SKILL.md file on disk and seeds it into the database
+2. **After seeding**, the database is the single source of truth for all skill content
+3. **User edits** in the UI are saved to the database only (not written back to disk)
+4. **"Reset to Default"** reloads the original SKILL.md content from the filesystem
+
+This ensures that user customizations are always preserved in the database while the original SKILL.md files remain as defaults.
+
 ## Connecting Skills
 
 Skills connect to the Chat Agent's **input-skill** handle (diamond shape):
@@ -373,12 +384,50 @@ You are a specialized assistant that...
 
 ## Skill Content Editor
 
-Skill nodes include a built-in code editor for viewing and editing SKILL.md content:
+Skill nodes include a built-in markdown editor for viewing and editing skill instructions:
 
 1. Select a skill node
 2. View the skill instructions in the markdown editor
 3. Make changes as needed
-4. Click **Save** to update the SKILL.md file
+4. Click **Save** to persist changes to the database
+
+<Info>
+Edits are saved to the database only. The original SKILL.md file on disk is not modified.
+</Info>
+
+---
+
+## Skill Folder Organization
+
+Skills are organized in subfolders under `server/skills/`. The skill loader uses **recursive scanning** (`rglob("SKILL.md")`) to discover skills at any nesting depth:
+
+```
+server/skills/
+├── assistant/                    # General-purpose assistant skills
+│   ├── assistant-personality/SKILL.md
+│   ├── code-skill/SKILL.md
+│   ├── http-skill/SKILL.md
+│   ├── maps-skill/SKILL.md
+│   ├── memory-skill/SKILL.md
+│   ├── scheduler-skill/SKILL.md
+│   ├── web-search-skill/SKILL.md
+│   └── whatsapp-skill/SKILL.md
+└── android/                      # Android device control skills
+    ├── personality/SKILL.md
+    └── skill/SKILL.md
+```
+
+Each top-level folder appears as an option in the **Master Skill** node's folder dropdown.
+
+### Scanning Skill Folders
+
+The Master Skill editor includes a **folder scanner** that discovers all skills within a selected folder. When you select a folder or enter a custom path:
+
+1. The backend recursively scans for all `SKILL.md` files in that directory
+2. Returns each skill's name, description, and metadata from the YAML frontmatter
+3. Skills appear in the Master Skill's left panel for enabling/disabling
+
+You can also type a custom folder path to scan skills from any directory on disk.
 
 ---
 

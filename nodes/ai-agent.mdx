@@ -15,17 +15,44 @@ MachinaOs provides two types of AI agents for different use cases, plus a memory
 | Chat Agent | Conversational AI with skills | Skill-driven behavior, multi-turn chat |
 | Simple Memory | Conversation history storage | Markdown format, long-term vector storage |
 
-### Specialized Agents
+### 15 Specialized Agents
 
-Pre-configured agents for specific domains. Same AI configuration as base agents with domain-focused defaults.
+Pre-configured agents for specific domains. Thirteen route to `handle_chat_agent` (shared LangGraph loop). `rlm_agent` and `claude_code_agent` have dedicated handlers.
 
-| Agent | Description | Color |
+| Agent | Description | Theme |
 |-------|-------------|-------|
-| Android Control Agent | Android device control | Green |
-| Coding Agent | Code execution | Cyan |
-| Web Control Agent | Web automation | Red |
-| Task Management Agent | Task automation | Purple |
-| Social Media Agent | Social messaging | Green |
+| Android Control Agent | Android device control via ADB | Green |
+| Coding Agent | Python / JavaScript / TypeScript code execution | Cyan |
+| Web Control Agent | Web automation and scraping | Pink |
+| Task Management Agent | Task automation and scheduling | Purple |
+| Social Media Agent | WhatsApp, Telegram, Twitter messaging | Green |
+| Travel Agent | Location and maps services | Orange |
+| Tool Agent | Flexible tool orchestration | Yellow |
+| Productivity Agent | Google Workspace workflows | Cyan |
+| Payments Agent | Payment processing | Green |
+| Consumer Agent | Customer support interactions | Purple |
+| Autonomous Agent | Code Mode with agentic loops (81-98% token savings) | Purple |
+| Orchestrator Agent | Team lead for multi-agent coordination | Cyan |
+| AI Employee | Team lead (alternate branding) | Purple |
+| RLM Agent | Recursive Language Model via REPL (`llm_query`, `rlm_query`, `FINAL`) | Orange |
+| Claude Code Agent | Claude Code SDK integration | Purple |
+
+### Agent Teams Pattern
+
+`orchestrator_agent` and `ai_employee` have an extra `input-teammates` handle. Connected agents become `delegate_to_<type>` tools automatically:
+
+```
+                 Team Lead (AI Employee / Orchestrator)
+                          |
+                          | input-teammates
+         +----------------+----------------+
+         |                |                |
+   Coding Agent      Web Agent       Task Agent
+   (delegate_to_     (delegate_to_   (delegate_to_
+    coding_agent)     web_agent)      task_agent)
+```
+
+Delegation is fire-and-forget: the child spawns as `asyncio.create_task()`, the parent continues working, and the child broadcasts status independently. Results can be retrieved via the auto-injected `check_delegated_tasks` tool or consumed by `taskTrigger` nodes.
 
 ---
 
@@ -39,12 +66,14 @@ The AI Agent uses LangGraph for structured execution with tool calling and itera
 |--------|----------|---------|
 | Main Input | Left | User prompt/data from upstream nodes |
 | Memory | Bottom-left (diamond) | Connect Simple Memory |
-| Tools | Bottom-right (diamond) | Connect Tool nodes |
+| Skill | Bottom (diamond) | Connect Master Skill |
+| Tools | Bottom (diamond) | Connect Tool nodes or dual-purpose nodes |
+| Task | Bottom-left (diamond) | Connect taskTrigger for delegation feedback |
 
 ### Parameters
 
 <ParamField path="provider" type="select" required>
-  AI provider: openai, anthropic, gemini, openrouter, groq, cerebras
+  AI provider: openai, anthropic, gemini, openrouter, groq, cerebras, xai, deepseek, kimi, mistral
 </ParamField>
 
 <ParamField path="model" type="select" required>
@@ -386,7 +415,7 @@ Long conversations with large window sizes can exceed model context limits. Use 
 
 <CardGroup cols={2}>
   <Card title="AI Models" icon="brain" href="/nodes/ai-models">
-    6 AI providers with thinking modes
+    10 AI providers with thinking modes
   </Card>
   <Card title="AI Skills" icon="wand-magic-sparkles" href="/nodes/skills">
     10 skill nodes for Chat Agent

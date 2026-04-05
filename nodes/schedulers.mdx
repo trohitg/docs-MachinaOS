@@ -103,7 +103,7 @@ Run workflows on a schedule using cron expressions.
 
 ## Timer
 
-Add a delay between nodes.
+Add a delay between nodes. The Timer is a **dual-purpose node** -- it works both as a workflow delay node and as an AI Agent tool.
 
 ### Parameters
 
@@ -120,12 +120,25 @@ Add a delay between nodes.
 - Rate limiting API calls
 - Waiting for external processes
 - Scheduling sequential actions
+- **AI Agent tool** -- agents can set timers programmatically when connected to `input-tools`
 
-### Example: Rate-Limited API Calls
+### As a Workflow Node
 
 ```
 [For Each Item] --> [HTTP Request] --> [Timer (1s)] --> [Next Item]
 ```
+
+### As an AI Agent Tool
+
+Connect the Timer to an agent's `input-tools` handle. The agent can then invoke the timer to introduce delays during reasoning:
+
+```
+[Timer] --(tools handle)--> [AI Agent] --> [Output]
+```
+
+<Info>
+See [AI Tools](/nodes/tools#timer-tool) for the full tool schema and LLM interaction details.
+</Info>
 
 ### Output
 
@@ -133,7 +146,7 @@ Add a delay between nodes.
 {
   "delayed": true,
   "duration_ms": 5000,
-  "completed_at": "2024-01-15T10:30:05Z"
+  "completed_at": "2025-01-30T10:30:05Z"
 }
 ```
 

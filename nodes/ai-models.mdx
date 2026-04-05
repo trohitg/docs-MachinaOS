@@ -1,22 +1,26 @@
 ---
 title: AI Chat Models
-description: OpenAI, Anthropic Claude, Google Gemini, OpenRouter, Groq, and Cerebras integration
+description: 10 LLM providers including OpenAI, Anthropic, Gemini, OpenRouter, Groq, Cerebras, xAI, DeepSeek, Kimi, and Mistral
 ---
 
 # AI Chat Models
 
-MachinaOs supports six AI providers for chat completions, with models fetched dynamically from each provider's API.
+MachinaOs supports **10 LLM providers** for chat completions, with models fetched dynamically from each provider's API. The backend uses a hybrid architecture: a native SDK layer in `server/services/llm/` for direct chat completions, and a LangChain + LangGraph path for agent tool-calling.
 
 ## Available Providers
 
 | Provider | Models | Best For |
 |----------|--------|----------|
-| OpenAI | GPT-4o, GPT-4 Turbo, o1, o3, o4-mini | General purpose, reasoning |
-| Anthropic | Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku | Coding, analysis, extended thinking |
-| Google | Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.0 Flash Thinking | Multimodal, long context |
+| OpenAI | GPT-4.x, GPT-5.x, o1, o3, o4-mini | General purpose, reasoning |
+| Anthropic | Claude 4.x Opus/Sonnet/Haiku | Coding, analysis, extended thinking |
+| Google Gemini | Gemini 2.5 Pro/Flash, Gemini 3 | Multimodal, long context (1M+) |
 | OpenRouter | 200+ models | Access multiple providers via single API |
-| Groq | Llama, Mixtral, Qwen | Ultra-fast inference |
-| Cerebras | Llama, Qwen | Ultra-fast on custom hardware |
+| Groq | Llama 4 Scout, Qwen3, GPT-OSS | Ultra-fast inference (LPU) |
+| Cerebras | Llama, Qwen | Ultra-fast on wafer-scale hardware |
+| xAI | Grok models | OpenAI-compatible API |
+| DeepSeek | deepseek-chat, deepseek-reasoner | V3 with always-on Chain-of-Thought |
+| Kimi | kimi-k2.5, kimi-k2-thinking | 256K context, thinking mode |
+| Mistral | mistral-large, codestral | Up to 256K context |
 
 ## Adding API Keys
 
@@ -337,16 +341,194 @@ Cerebras provides ultra-fast inference on custom wafer-scale AI hardware.
 
 ---
 
+## xAI (Grok)
+
+xAI's Grok models via their OpenAI-compatible API. The backend routes xAI through the shared `OpenAIProvider` with `base_url=https://api.x.ai/v1`.
+
+### Models
+
+| Model | Best For |
+|-------|----------|
+| grok-beta | Real-time knowledge, conversational |
+| grok-vision-beta | Multimodal with image understanding |
+
+### Parameters
+
+<ParamField path="model" type="select" required>
+  Grok model to use
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The message to send
+</ParamField>
+
+<ParamField path="temperature" type="slider" default="0.7">
+  Randomness (0-2)
+</ParamField>
+
+<ParamField path="maxTokens" type="number" default="4096">
+  Maximum response length
+</ParamField>
+
+---
+
+## DeepSeek
+
+DeepSeek V3 models with optional always-on Chain-of-Thought reasoning.
+
+### Models
+
+| Model | Best For |
+|-------|----------|
+| deepseek-chat | General purpose, fast |
+| deepseek-reasoner | Always-on Chain-of-Thought reasoning (128K context, up to 64K output) |
+
+### Parameters
+
+<ParamField path="model" type="select" required>
+  DeepSeek model
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The message to send
+</ParamField>
+
+<ParamField path="temperature" type="slider" default="0.7">
+  Randomness (0-2)
+</ParamField>
+
+<ParamField path="maxTokens" type="number" default="8192">
+  Maximum response length (up to 64K for reasoner)
+</ParamField>
+
+### Reasoner Output
+
+The `deepseek-reasoner` model always returns reasoning in the `reasoning_content` field. MachinaOs maps this to the standard `thinking` field:
+
+```json
+{
+  "response": "The final answer",
+  "thinking": "Step-by-step reasoning (reasoner only)",
+  "model": "deepseek-reasoner"
+}
+```
+
+<Info>
+DeepSeek Reasoner's thinking is always on and cannot be disabled.
+</Info>
+
+---
+
+## Kimi (Moonshot AI)
+
+Moonshot's Kimi models with 256K context window and optional thinking mode.
+
+### Models
+
+| Model | Best For |
+|-------|----------|
+| kimi-k2.5 | General purpose, 256K context, 96K output |
+| kimi-k2-thinking | Deep reasoning tasks |
+
+### Parameters
+
+<ParamField path="model" type="select" required>
+  Kimi model
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The message to send
+</ParamField>
+
+<ParamField path="maxTokens" type="number" default="4096">
+  Maximum response length (up to 96K)
+</ParamField>
+
+<Warning>
+Kimi models use fixed temperatures: 0.6 for instant (k2.5), 1.0 for thinking (k2-thinking). User-set temperature is ignored for compatibility with LangGraph agent mode.
+</Warning>
+
+### Output
+
+```json
+{
+  "response": "Kimi response",
+  "thinking": "Reasoning (k2-thinking only)",
+  "model": "kimi-k2.5"
+}
+```
+
+---
+
+## Mistral
+
+Mistral AI models including Large, Small, and Codestral for code tasks.
+
+### Models
+
+| Model | Best For |
+|-------|----------|
+| mistral-large-latest | Most capable, general purpose |
+| mistral-small-latest | Fast, cost-effective |
+| codestral-latest | Code generation and completion |
+
+### Parameters
+
+<ParamField path="model" type="select" required>
+  Mistral model
+</ParamField>
+
+<ParamField path="prompt" type="string" required>
+  The message to send
+</ParamField>
+
+<ParamField path="temperature" type="slider" default="0.7">
+  Randomness (0-1.5)
+</ParamField>
+
+<ParamField path="maxTokens" type="number" default="8192">
+  Maximum response length (up to 131K)
+</ParamField>
+
+### Output
+
+```json
+{
+  "response": "Mistral response",
+  "model": "mistral-large-latest"
+}
+```
+
+<Info>
+Mistral models support up to 256K context but do not have a thinking mode. Temperature range is 0-1.5 (not 0-2).
+</Info>
+
+---
+
+## Native SDK vs LangChain Path
+
+MachinaOs uses a hybrid architecture for LLM access:
+
+- **Native SDK path** (`server/services/llm/`): Used by `execute_chat()` for direct chat completions. Returns a normalized `LLMResponse` dataclass across all providers. Bypasses LangChain for OpenAI, Anthropic, Gemini, OpenRouter, xAI, DeepSeek, Kimi, and Mistral.
+- **LangChain path**: Used by `execute_agent()` and `execute_chat_agent()` for tool-calling agents via LangGraph. All 10 providers supported.
+
+OpenAI-compatible providers (xAI, DeepSeek, Kimi, Mistral) reuse the `OpenAIProvider` class with `base_url` read from `server/config/llm_defaults.json`. Adding a new OpenAI-compatible provider is a pure config change with no new code.
+
+---
+
 ## Thinking/Reasoning Modes
 
 Several providers support extended thinking or reasoning modes that show the model's internal reasoning process.
 
 | Provider | Models | Parameter |
 |----------|--------|-----------|
-| Claude | 3.5 Sonnet, 3 Opus | thinkingBudget (tokens) |
-| Gemini | 2.5 Pro/Flash, Flash Thinking | thinkingBudget (tokens) |
-| OpenAI | o1, o3, o4 series | reasoningEffort (level) |
-| Groq | Qwen3, QwQ | reasoningFormat (parsed/hidden) |
+| Claude | Claude 4.x with thinking | thinkingBudget (tokens) |
+| Gemini | 2.5 Pro/Flash, Gemini 3 | thinkingBudget (tokens) or thinking_level |
+| OpenAI | o1, o3, o4 series, GPT-5 hybrid | reasoningEffort (low/medium/high) |
+| Groq | Qwen3-32b | reasoningFormat (parsed/hidden) |
+| Cerebras | Qwen-3-235b | reasoningFormat (parsed/hidden) |
+| DeepSeek | deepseek-reasoner | Always on (not configurable) |
+| Kimi | kimi-k2-thinking | On by default |
 
 ### Using Thinking Output
 
@@ -361,13 +543,13 @@ The `thinking` field is available in the node output for downstream nodes:
 
 ## Comparing Providers
 
-| Feature | OpenAI | Claude | Gemini | OpenRouter | Groq | Cerebras |
-|---------|--------|--------|--------|------------|------|----------|
-| Speed | Fast | Medium | Fast | Varies | Ultra-fast | Ultra-fast |
-| Reasoning | o-series | Extended thinking | Thinking mode | Model-dependent | Qwen3/QwQ | - |
-| Context Window | 128K | 200K | 1M+ | Varies | 32K-128K | 128K |
-| Multimodal | Yes | Yes | Yes | Model-dependent | No | No |
-| JSON Mode | Yes | No | No | Model-dependent | No | No |
+| Feature | OpenAI | Claude | Gemini | OpenRouter | Groq | Cerebras | xAI | DeepSeek | Kimi | Mistral |
+|---------|--------|--------|--------|------------|------|----------|-----|----------|------|---------|
+| Speed | Fast | Medium | Fast | Varies | Ultra-fast | Ultra-fast | Fast | Fast | Fast | Fast |
+| Reasoning | o-series, GPT-5 | Extended thinking | Thinking mode | Model-dependent | Qwen3 | Qwen-3 | - | Always-on CoT | K2-thinking | - |
+| Context Window | 128K-1M | 200K-1M | 1M+ | Varies | 32K-131K | 128K | 128K | 128K | 256K | 256K |
+| Multimodal | Yes | Yes | Yes | Model-dependent | No | No | Yes | No | No | No |
+| JSON Mode | Yes | No | No | Model-dependent | No | No | Yes | Yes | Yes | Yes |
 
 ---
 

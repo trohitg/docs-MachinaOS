@@ -27,6 +27,7 @@ Tool nodes provide capabilities that AI Agents can invoke during reasoning. Each
 |------|-------------|----------|
 | Calculator | Math operations | Calculations, arithmetic |
 | Current Time | Date/time with timezone | Scheduling, time-based logic |
+| Timer | Set delays and timers | Rate limiting, scheduled pauses |
 | Web Search | Search the internet | Current information, research |
 | Android Toolkit | Android device control | Device automation |
 | AI Agent | Delegate to child agent | Complex sub-tasks (fire-and-forget) |
@@ -127,6 +128,58 @@ User: "What time is it in Tokyo?"
 Agent: [Calls currentTime with timezone="Asia/Tokyo"]
        "It's currently 4:30 AM on Friday in Tokyo."
 ```
+
+---
+
+## Timer Tool
+
+The Timer node is a **dual-purpose node** that works both as a workflow delay node and as an AI Agent tool. When connected to an agent's `input-tools` handle, the agent can set timers and delays programmatically.
+
+### Parameters
+
+<ParamField path="toolName" type="string" default="timer">
+  Tool identifier shown to the LLM
+</ParamField>
+
+<ParamField path="delay" type="number" required>
+  Delay duration
+</ParamField>
+
+<ParamField path="unit" type="select" default="seconds">
+  Time unit: seconds, minutes, hours
+</ParamField>
+
+### Schema (LLM View)
+
+```json
+{
+  "delay": "number (duration to wait)",
+  "unit": "seconds | minutes | hours"
+}
+```
+
+### Output
+
+```json
+{
+  "delayed": true,
+  "duration_ms": 5000,
+  "completed_at": "2025-01-30T10:30:05Z"
+}
+```
+
+### Example Interaction
+
+```
+User: "Wait 5 seconds before checking the battery again"
+Agent: [Calls timer with delay=5, unit="seconds"]
+       [Calls battery status after timer completes]
+       "After waiting 5 seconds, the battery is now at 73%."
+```
+
+<Info>
+The Timer node appears in both the **Schedulers** section (as a workflow node) and the **Tools** section (as an AI Agent tool). See [Schedulers & Triggers](/nodes/schedulers) for workflow usage.
+</Info>
 
 ---
 

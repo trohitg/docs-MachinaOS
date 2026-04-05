@@ -8,33 +8,38 @@ description: Visual workflow automation platform with AI agents, WhatsApp, and A
 MachinaOs is an open-source workflow automation platform inspired by n8n, built with React Flow and Python FastAPI. Create powerful automations using a visual node-based editor with real-time execution feedback.
 
 <CardGroup cols={2}>
-  <Card title="60 Nodes" icon="cube">
-    AI models, agents, skills, WhatsApp, Android, documents, webhooks, and more
+  <Card title="96 Nodes" icon="cube">
+    AI models, 15 specialized agents, Google Workspace, WhatsApp, Android, documents, webhooks, and more
   </Card>
   <Card title="WebSocket-First" icon="bolt">
-    28 WebSocket message types for real-time status updates
+    89 WebSocket message handlers for real-time status updates
   </Card>
   <Card title="AI-Powered" icon="brain">
-    6 AI providers with conversation memory, tool calling, and thinking modes
+    10 LLM providers with conversation memory, tool calling, and thinking modes
   </Card>
   <Card title="Self-Hosted" icon="server">
-    Full control with Docker deployment and n8n-pattern caching
+    Full control with Docker deployment, Temporal distributed execution, and encrypted credentials
   </Card>
 </CardGroup>
 
 ## Key Features
 
 ### AI Integration
-Connect to 6 AI providers with built-in conversation memory, tool calling, and thinking modes.
+Connect to 10 LLM providers with built-in conversation memory, tool calling, and thinking modes.
 
-- **OpenAI** - GPT-4o, GPT-4 Turbo, o1, o3, o4-mini with response format and reasoning effort
-- **Anthropic** - Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku with extended thinking
-- **Google** - Gemini 2.5 Pro, Gemini 2.5 Flash, Gemini 2.0 Flash Thinking with multimodal support
+- **OpenAI** - GPT-4.x, GPT-5.x, o1, o3, o4-mini with response format and reasoning effort
+- **Anthropic** - Claude 4.x Opus/Sonnet/Haiku with extended thinking via `budget_tokens`
+- **Google Gemini** - Gemini 2.5 Pro/Flash, Gemini 3 with multimodal support and thinking budget
 - **OpenRouter** - 200+ models via unified API (OpenAI, Claude, Llama, Mistral, and more)
-- **Groq** - Ultra-fast inference with Llama, Mixtral, Qwen with reasoning modes
-- **Cerebras** - Ultra-fast inference on custom AI hardware
+- **Groq** - Ultra-fast inference with Llama 4, Qwen3, GPT-OSS
+- **Cerebras** - Ultra-fast inference on custom wafer-scale AI hardware
+- **xAI** - Grok models via OpenAI-compatible API
+- **DeepSeek** - V3 Chat + Reasoner (always-on Chain-of-Thought)
+- **Kimi** - Moonshot K2.5 / K2-thinking (256K context)
+- **Mistral** - Large / Small / Codestral (up to 256K context)
 - **AI Agent** - LangGraph agent with tool calling and iterative reasoning
-- **Chat Agent** - Conversational agent with skill support for multi-turn chat
+- **Chat Agent** - Conversational agent (Zeenie) with skill support for multi-turn chat
+- **15 Specialized Agents** - Android, Coding, Web, Task, Social, Travel, Tool, Productivity, Payments, Consumer, Autonomous, Orchestrator, AI Employee, RLM, Claude Code
 - **Simple Memory** - Markdown-based conversation history with long-term vector storage
 
 ### WhatsApp Automation
